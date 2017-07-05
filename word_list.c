@@ -9,6 +9,8 @@
 #define READ_BUF_SIZE	256
 #define READ_BLOCK_LEN	100
 
+#define MAX_WORD_LEN	50
+
 #define GRID_X_LEN		4
 #define GRID_Y_LEN		4
 
@@ -77,9 +79,9 @@ static size_t MemoryFreed_Blocks = 0;
  */
 static LetterNode *WordList = NULL;
 
-static RETURN_CODE read_next_word (FILE *file, char **word_text);
+static RETURN_CODE read_next_word (FILE *file, char *word_text);
 static LetterNode* new_letter (LetterNode **letter_node, char letter, unsigned char is_word);
-static RETURN_CODE add_new_word_to_wordlist (char **word_text);
+static RETURN_CODE add_new_word_to_wordlist (char *word_text);
 static RETURN_CODE build_wordlist (FILE *file);
 static int find_word (LetterNode *wordlist, unsigned char *word);
 static void free_wordlist (LetterNode *wordlist);
@@ -90,10 +92,10 @@ static void print_all_found_words_from_prefix(char grid[GRID_X_LEN][GRID_Y_LEN],
 static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y);
 static void string_to_grid (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN]);
 
-static RETURN_CODE read_next_word (FILE *file, char **word_text)
+static RETURN_CODE read_next_word (FILE *file, char *word_text)
 {
 	char *new_line_ptr;
-	size_t read_bytes, cur_length;
+	size_t read_bytes, cur_length, word_len;
 
 	new_line_ptr = strstr(ReadBuffer, "\n");
 	if (new_line_ptr == NULL)
@@ -112,16 +114,17 @@ static RETURN_CODE read_next_word (FILE *file, char **word_text)
 		}
 		*(ReadBuffer+cur_length+read_bytes) = '\0';
    }
-   /* malloc next word text */
-   (*word_text) = (char*)malloc((new_line_ptr-ReadBuffer)+1);
-   if ((*word_text) == NULL)
-   {
-      return RC_NO_MEM;
-   }
+
+	/* check word length does not exceed maximum */
+	word_len = new_line_ptr - ReadBuffer;
+	if (word_len > MAX_WORD_LEN)
+	{
+		return RC_BAD_FORMAT;
+	}
    
 	/* copy next line into from ReadBuffer into line */
-	strncpy((*word_text), ReadBuffer, new_line_ptr-ReadBuffer);
-	(*word_text)[new_line_ptr-ReadBuffer] = '\0';
+	strncpy(word_text, ReadBuffer, new_line_ptr-ReadBuffer);
+	word_text[new_line_ptr-ReadBuffer] = '\0';
 
 	/* erase it from ReadBuffer - can be optimized */
 	memmove(ReadBuffer, new_line_ptr+1, strlen(new_line_ptr+1)+1);
@@ -146,7 +149,7 @@ static LetterNode* new_letter (LetterNode **letter_node, char letter, unsigned c
    return (*letter_node);
 }
 
-static RETURN_CODE add_new_word_to_wordlist (char **word_text)
+static RETURN_CODE add_new_word_to_wordlist (char *word_text)
 {
    LetterNode *nxt_search = WordList;
    LetterNode *nxt_search_prev;
@@ -156,7 +159,7 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
    size_t i, word_len;
    unsigned char is_word, letter_added_to_adjacent;
 
-   word_len = strlen(*word_text);
+   word_len = strlen(word_text);
    for (i = 0; i < word_len; i++)
    {
       is_word = (i == (word_len - 1))? 1: 0;
@@ -164,7 +167,7 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
       /* no letters exist in this depth */
       if (nxt_search == NULL)
       {
-         letter_node = new_letter(&letter_node, (*word_text)[i], is_word);
+         letter_node = new_letter(&letter_node, word_text[i], is_word);
          if (letter_node == NULL)
          {
             return RC_NO_MEM;
@@ -199,19 +202,19 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
             assert(adj_search);
             adj_adj_search = adj_search->adjacent;
             
-            if (adj_search->letter == ((*word_text)[i]))
+            if (adj_search->letter == (word_text[i]))
             {
                nxt_search_prev = adj_search;
                nxt_search = nxt_search_prev->next;
                letter_added_to_adjacent = 1; /* letter already exists - do nothing */
             }
             
-            else if (adj_search->letter < ((*word_text)[i]))
+            else if (adj_search->letter < (word_text[i]))
             {
                if (adj_adj_search == NULL)
                {
                   /* add letter to the end of ADJACENT list */
-                  letter_node = new_letter(&letter_node, (*word_text)[i], is_word);
+                  letter_node = new_letter(&letter_node, word_text[i], is_word);
                   if (letter_node == NULL)
                   {
                      return RC_NO_MEM;
@@ -224,10 +227,10 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
                   letter_added_to_adjacent = 1;
 
                }
-               else if (adj_adj_search->letter > ((*word_text)[i]))
+               else if (adj_adj_search->letter > (word_text[i]))
                {
                   /* add letter between adj_search and adj_adj_search */
-                  letter_node = new_letter(&letter_node, (*word_text)[i], is_word);
+                  letter_node = new_letter(&letter_node, word_text[i], is_word);
                   if (letter_node == NULL)
                   {
                      return RC_NO_MEM;
@@ -240,12 +243,12 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
                   nxt_search = nxt_search_prev->next;
                   letter_added_to_adjacent = 1;
                }
-               /* else (adj_adj_search->letter <= ((*word_text)[i])) - to be handled in the next loop iteration */
+               /* else (adj_adj_search->letter <= (word_text[i])) - to be handled in the next loop iteration */
             }
-            else /* (adj_search->letter > ((*word_text)[i])) */
+            else /* (adj_search->letter > (word_text[i])) */
             {
                /* add letter at the start of ADJACENT list */
-               letter_node = new_letter(&letter_node, (*word_text)[i], is_word);
+               letter_node = new_letter(&letter_node, word_text[i], is_word);
                if (letter_node == NULL)
                {
                   return RC_NO_MEM;
@@ -268,16 +271,13 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
 
 static RETURN_CODE build_wordlist (FILE *file)
 {
-   char *word_text;
+   char word_text[MAX_WORD_LEN+1];
    RETURN_CODE ret_code;
 
    /* build wordlist from file */
-   while ((ret_code = read_next_word(file, &word_text)) == RC_NO_ERROR)
+   while ((ret_code = read_next_word(file, word_text)) == RC_NO_ERROR)
    {
-      ret_code = add_new_word_to_wordlist(&word_text);
-
-      /* temp solution */
-      free(word_text);
+      ret_code = add_new_word_to_wordlist(word_text);
 
       if (ret_code != RC_NO_ERROR)
       {
