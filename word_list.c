@@ -83,8 +83,8 @@ static LetterNode *WordList = NULL;
 static RETURN_CODE read_next_word_from_file (FILE *file, char *word);
 static RETURN_CODE add_new_word_to_wordlist (char *word);
 static LetterNode* new_letter_node (LetterNode **letter_node, char letter, unsigned char is_word);
-static RETURN_CODE build_wordlist (FILE *file);
 static int find_word (LetterNode *wordlist, char *word);
+static RETURN_CODE build_wordlist (FILE *file);
 static void free_wordlist (LetterNode *wordlist);
 
 /* grid related local functions */
@@ -377,6 +377,37 @@ static void print_all_found_words_in_grid (char grid[GRID_X_LEN][GRID_Y_LEN])
    }
 }
 
+/*
+* description: print all found words that start with the prefix word and that exists on the grid
+*
+* parameters:
+*
+* grid: - letters grid, e.g.         
+*                           +-------+ 
+*                           |a|b|a|n|
+*                           +-------+
+*                           |s|d|f|d|
+*                           +-------+
+*                           |g|h|j|o|
+*                           +-------+
+*                           |k|l|n|z|
+*                           +-------+
+*
+* word: prefix string, e.g.: "aband"
+*
+* i,j: the x,y indices of word last letter, e.g.: (1,3)
+*
+* grid_ctrl: grid control that marks which letters are used (as part of word) and which aren't e.g. (x=used; -=unused):
+*                           +-------+ 
+*                           |x|x|x|x|
+*                           +-------+
+*                           |-|-|-|x|
+*                           +-------+
+*                           |-|-|-|-|
+*                           +-------+
+*                           |-|-|-|-|
+*                           +-------+
+*/
 static void print_all_found_words_from_prefix (char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
 {
 	char grid_ctrl_next[GRID_X_LEN][GRID_Y_LEN];
@@ -416,6 +447,27 @@ static void print_all_found_words_from_prefix (char grid[GRID_X_LEN][GRID_Y_LEN]
 	/* else: NOT_FOUND - no need to check further this prefix */
 }
 
+/*
+* description: get next adjecent unused cell
+*
+* parameters:
+*
+* grid_ctrl: (input) grid control that marks which letters are used and which aren't e.g. (x=used; -=unused):
+*                           +-------+ 
+*                           |x|x|x|x|
+*                           +-------+
+*                           |-|-|-|x|
+*                           +-------+
+*                           |-|-|-|-|
+*                           +-------+
+*                           |-|-|-|-|
+*                           +-------+
+*
+* i,j: (input) the x,y indices of the letter (to find the next adjacent cell that is unused)
+*
+* x,y: (output) the indices of next unused adjacent letter
+*
+*/
 static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y)
 {
 	while (((*x) != (i-1)) || ((*y) != (j-1)))
@@ -504,6 +556,23 @@ static void free_wordlist (LetterNode *wordlist)
    MemoryFreed_Blocks++;
 }
 
+/*
+* description: convert string (length GRID_X_LEN x GRID_Y_LEN) to character 2D matrix  grid
+*
+* parameters:
+*
+* string: (input) string (length GRID_X_LEN x GRID_Y_LEN) e.g. (3 x 4): "abcdefghijkl"
+*
+* grid: (output) charater 2D (GRID_X_LEN x GRID_Y_LEN) grid, e.g:
+*                                                                         +-------+ 
+*                                                                         |a|b|c|d|
+*                                                                         +-------+
+*                                                                         |e|f|g|h|
+*                                                                         +-------+
+*                                                                         |i|j|k|l|
+*                                                                         +-------+
+*
+*/
 static void string_to_grid (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN])
 {
 	int i, j, h = 0;
