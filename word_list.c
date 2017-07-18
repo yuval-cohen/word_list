@@ -9,6 +9,8 @@
 #define READ_BUF_SIZE	256
 #define READ_BLOCK_LEN	100
 
+#define MAX_WORD_LEN	50
+
 #define GRID_X_LEN		4
 #define GRID_Y_LEN		4
 
@@ -77,23 +79,26 @@ static size_t MemoryFreed_Blocks = 0;
  */
 static LetterNode *WordList = NULL;
 
-static RETURN_CODE read_next_word (FILE *file, char **word_text);
-static LetterNode* new_letter (LetterNode **letter_node, char letter, unsigned char is_word);
-static RETURN_CODE add_new_word_to_wordlist (char **word_text);
+/* word list related local functions */
+static RETURN_CODE read_next_word_from_file (FILE *file, char *word);
+static RETURN_CODE add_new_word_to_wordlist (char *word);
+static LetterNode* new_letter_node (LetterNode **letter_node, char letter, unsigned char is_word);
+static int find_word (LetterNode *wordlist, char *word);
 static RETURN_CODE build_wordlist (FILE *file);
-static int find_word (LetterNode *wordlist, unsigned char *word);
 static void free_wordlist (LetterNode *wordlist);
+
+/* grid related local functions */
 static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
 static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char grid_ctrl2[GRID_X_LEN][GRID_Y_LEN]);
 static void print_all_found_words_in_grid (char grid[GRID_X_LEN][GRID_Y_LEN]);
-static void print_all_found_words_from_prefix(char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
+static void print_all_found_words_from_prefix (char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
 static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y);
 static void string_to_grid (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN]);
 
-static RETURN_CODE read_next_word (FILE *file, char **word_text)
+static RETURN_CODE read_next_word_from_file (FILE *file, char *word)
 {
 	char *new_line_ptr;
-	size_t read_bytes, cur_length;
+	size_t read_bytes, cur_length, word_len;
 
 	new_line_ptr = strstr(ReadBuffer, "\n");
 	if (new_line_ptr == NULL)
@@ -112,16 +117,17 @@ static RETURN_CODE read_next_word (FILE *file, char **word_text)
 		}
 		*(ReadBuffer+cur_length+read_bytes) = '\0';
    }
-   /* malloc next word text */
-   (*word_text) = (char*)malloc((new_line_ptr-ReadBuffer)+1);
-   if ((*word_text) == NULL)
-   {
-      return RC_NO_MEM;
-   }
+
+	/* check word length does not exceed maximum */
+	word_len = new_line_ptr - ReadBuffer;
+	if (word_len > MAX_WORD_LEN)
+	{
+		return RC_BAD_FORMAT;
+	}
    
 	/* copy next line into from ReadBuffer into line */
-	strncpy((*word_text), ReadBuffer, new_line_ptr-ReadBuffer);
-	(*word_text)[new_line_ptr-ReadBuffer] = '\0';
+	strncpy(word, ReadBuffer, new_line_ptr-ReadBuffer);
+	word[new_line_ptr-ReadBuffer] = '\0';
 
 	/* erase it from ReadBuffer - can be optimized */
 	memmove(ReadBuffer, new_line_ptr+1, strlen(new_line_ptr+1)+1);
@@ -129,7 +135,7 @@ static RETURN_CODE read_next_word (FILE *file, char **word_text)
 	return RC_NO_ERROR;
 }
 
-static LetterNode* new_letter (LetterNode **letter_node, char letter, unsigned char is_word)
+static LetterNode* new_letter_node (LetterNode **letter_node, char letter, unsigned char is_word)
 {
    (*letter_node) = (LetterNode*)malloc(sizeof(LetterNode));
    if ((*letter_node) != NULL)
@@ -146,7 +152,7 @@ static LetterNode* new_letter (LetterNode **letter_node, char letter, unsigned c
    return (*letter_node);
 }
 
-static RETURN_CODE add_new_word_to_wordlist (char **word_text)
+static RETURN_CODE add_new_word_to_wordlist (char *word)
 {
    LetterNode *nxt_search = WordList;
    LetterNode *nxt_search_prev;
@@ -156,7 +162,7 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
    size_t i, word_len;
    unsigned char is_word, letter_added_to_adjacent;
 
-   word_len = strlen(*word_text);
+   word_len = strlen(word);
    for (i = 0; i < word_len; i++)
    {
       is_word = (i == (word_len - 1))? 1: 0;
@@ -164,7 +170,7 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
       /* no letters exist in this depth */
       if (nxt_search == NULL)
       {
-         letter_node = new_letter(&letter_node, (*word_text)[i], is_word);
+         letter_node = new_letter_node(&letter_node, word[i], is_word);
          if (letter_node == NULL)
          {
             return RC_NO_MEM;
@@ -199,19 +205,19 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
             assert(adj_search);
             adj_adj_search = adj_search->adjacent;
             
-            if (adj_search->letter == ((*word_text)[i]))
+            if (adj_search->letter == (word[i]))
             {
                nxt_search_prev = adj_search;
                nxt_search = nxt_search_prev->next;
                letter_added_to_adjacent = 1; /* letter already exists - do nothing */
             }
             
-            else if (adj_search->letter < ((*word_text)[i]))
+            else if (adj_search->letter < (word[i]))
             {
                if (adj_adj_search == NULL)
                {
                   /* add letter to the end of ADJACENT list */
-                  letter_node = new_letter(&letter_node, (*word_text)[i], is_word);
+                  letter_node = new_letter_node(&letter_node, word[i], is_word);
                   if (letter_node == NULL)
                   {
                      return RC_NO_MEM;
@@ -224,10 +230,10 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
                   letter_added_to_adjacent = 1;
 
                }
-               else if (adj_adj_search->letter > ((*word_text)[i]))
+               else if (adj_adj_search->letter > (word[i]))
                {
                   /* add letter between adj_search and adj_adj_search */
-                  letter_node = new_letter(&letter_node, (*word_text)[i], is_word);
+                  letter_node = new_letter_node(&letter_node, word[i], is_word);
                   if (letter_node == NULL)
                   {
                      return RC_NO_MEM;
@@ -240,12 +246,12 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
                   nxt_search = nxt_search_prev->next;
                   letter_added_to_adjacent = 1;
                }
-               /* else (adj_adj_search->letter <= ((*word_text)[i])) - to be handled in the next loop iteration */
+               /* else (adj_adj_search->letter <= (word[i])) - to be handled in the next loop iteration */
             }
-            else /* (adj_search->letter > ((*word_text)[i])) */
+            else /* (adj_search->letter > (word[i])) */
             {
                /* add letter at the start of ADJACENT list */
-               letter_node = new_letter(&letter_node, (*word_text)[i], is_word);
+               letter_node = new_letter_node(&letter_node, word[i], is_word);
                if (letter_node == NULL)
                {
                   return RC_NO_MEM;
@@ -268,16 +274,13 @@ static RETURN_CODE add_new_word_to_wordlist (char **word_text)
 
 static RETURN_CODE build_wordlist (FILE *file)
 {
-   char *word_text;
+   char word[MAX_WORD_LEN+1];
    RETURN_CODE ret_code;
 
    /* build wordlist from file */
-   while ((ret_code = read_next_word(file, &word_text)) == RC_NO_ERROR)
+   while ((ret_code = read_next_word_from_file(file, word)) == RC_NO_ERROR)
    {
-      ret_code = add_new_word_to_wordlist(&word_text);
-
-      /* temp solution */
-      free(word_text);
+      ret_code = add_new_word_to_wordlist(word);
 
       if (ret_code != RC_NO_ERROR)
       {
@@ -288,7 +291,7 @@ static RETURN_CODE build_wordlist (FILE *file)
    return ret_code;
 }
 
-static int find_word (LetterNode *wordlist, unsigned char *word)
+static int find_word (LetterNode *wordlist, char *word)
 {
    size_t word_len;
    LetterNode *search;
@@ -374,7 +377,38 @@ static void print_all_found_words_in_grid (char grid[GRID_X_LEN][GRID_Y_LEN])
    }
 }
 
-static void print_all_found_words_from_prefix(char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
+/*
+* description: print all found words that start with the prefix word and that exists on the grid
+*
+* parameters:
+*
+* grid: - letters grid, e.g.         
+*                           +-------+ 
+*                           |a|b|a|n|
+*                           +-------+
+*                           |s|d|f|d|
+*                           +-------+
+*                           |g|h|j|o|
+*                           +-------+
+*                           |k|l|n|z|
+*                           +-------+
+*
+* word: prefix string, e.g.: "aband"
+*
+* i,j: the x,y indices of word last letter, e.g.: (1,3)
+*
+* grid_ctrl: grid control that marks which letters are used (as part of word) and which aren't e.g. (x=used; -=unused):
+*                           +-------+ 
+*                           |x|x|x|x|
+*                           +-------+
+*                           |-|-|-|x|
+*                           +-------+
+*                           |-|-|-|-|
+*                           +-------+
+*                           |-|-|-|-|
+*                           +-------+
+*/
+static void print_all_found_words_from_prefix (char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
 {
 	char grid_ctrl_next[GRID_X_LEN][GRID_Y_LEN];
 	char word_next[(GRID_X_LEN*GRID_Y_LEN)+1];
@@ -413,6 +447,27 @@ static void print_all_found_words_from_prefix(char grid[GRID_X_LEN][GRID_Y_LEN],
 	/* else: NOT_FOUND - no need to check further this prefix */
 }
 
+/*
+* description: get next adjecent unused cell
+*
+* parameters:
+*
+* grid_ctrl: (input) grid control that marks which letters are used and which aren't e.g. (x=used; -=unused):
+*                           +-------+ 
+*                           |x|x|x|x|
+*                           +-------+
+*                           |-|-|-|x|
+*                           +-------+
+*                           |-|-|-|-|
+*                           +-------+
+*                           |-|-|-|-|
+*                           +-------+
+*
+* i,j: (input) the x,y indices of the letter (to find the next adjacent cell that is unused)
+*
+* x,y: (output) the indices of next unused adjacent letter
+*
+*/
 static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y)
 {
 	while (((*x) != (i-1)) || ((*y) != (j-1)))
@@ -501,6 +556,23 @@ static void free_wordlist (LetterNode *wordlist)
    MemoryFreed_Blocks++;
 }
 
+/*
+* description: convert string (length GRID_X_LEN x GRID_Y_LEN) to character 2D matrix  grid
+*
+* parameters:
+*
+* string: (input) string (length GRID_X_LEN x GRID_Y_LEN) e.g. (3 x 4): "abcdefghijkl"
+*
+* grid: (output) charater 2D (GRID_X_LEN x GRID_Y_LEN) grid, e.g:
+*                                                                         +-------+ 
+*                                                                         |a|b|c|d|
+*                                                                         +-------+
+*                                                                         |e|f|g|h|
+*                                                                         +-------+
+*                                                                         |i|j|k|l|
+*                                                                         +-------+
+*
+*/
 static void string_to_grid (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN])
 {
 	int i, j, h = 0;
@@ -525,7 +597,7 @@ int main (int argc, char* argv[])
 #ifndef _MY_DEBUG_
 	if ((argc != 3) || (strlen(argv[2]) != (GRID_X_LEN*GRID_Y_LEN)))
 	{
-		printf("Usage: word_list.exe <word-list-file> <gird-as-16-chars-string>\n");
+		printf("Usage: word_list.exe <word-list-file> <gird-as-%d-chars-string>\n", GRID_X_LEN*GRID_Y_LEN);
 	}
 	else
 #endif
