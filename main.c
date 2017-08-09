@@ -11,7 +11,7 @@
 
 //#define _MY_DEBUG_
 
-extern LetterNode *WordList;
+LetterNode *WordList;
 
 /* grid related local functions */
 static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
@@ -286,7 +286,7 @@ int main (int argc, char* argv[])
 		}
 		else
 		{
-			ret_code = build_wordlist(input_file);
+			ret_code = build_wordlist(&WordList, input_file);
 
 			if (ret_code == RC_EOF)
 			{

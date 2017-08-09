@@ -38,11 +38,10 @@ static size_t MemoryFreed_Blocks = 0;
               |
               l.->i->i.->s.    
  */
-LetterNode *WordList = NULL;
 
 /* word list related local functions */
 static RETURN_CODE read_next_word_from_file (FILE *file, char *word);
-static RETURN_CODE add_new_word_to_wordlist (char *word);
+static RETURN_CODE add_new_word_to_wordlist (LetterNode **wordList, char *word);
 static LetterNode* new_letter_node (LetterNode **letter_node, char letter, unsigned char is_word);
 
 static RETURN_CODE read_next_word_from_file (FILE *file, char *word)
@@ -102,9 +101,9 @@ static LetterNode* new_letter_node (LetterNode **letter_node, char letter, unsig
    return (*letter_node);
 }
 
-static RETURN_CODE add_new_word_to_wordlist (char *word)
+static RETURN_CODE add_new_word_to_wordlist (LetterNode **wordList, char *word)
 {
-   LetterNode *nxt_search = WordList;
+   LetterNode *nxt_search = (*wordList);
    LetterNode *nxt_search_prev;
    LetterNode *adj_search;
    LetterNode *adj_adj_search;
@@ -128,10 +127,10 @@ static RETURN_CODE add_new_word_to_wordlist (char *word)
 
          nxt_search = letter_node;
          
-         /* initialise WordList if the very first letter */
-         if (WordList == NULL)
+         /* initialise wordList if the very first letter */
+         if ((*wordList) == NULL)
          {
-            WordList = letter_node;
+            (*wordList) = letter_node;
          }
          else
          {
@@ -222,7 +221,7 @@ static RETURN_CODE add_new_word_to_wordlist (char *word)
    return RC_NO_ERROR;
 }
 
-RETURN_CODE build_wordlist (FILE *file)
+RETURN_CODE build_wordlist (LetterNode **wordlist, FILE *file)
 {
    char word[MAX_WORD_LEN+1];
    RETURN_CODE ret_code;
@@ -230,7 +229,7 @@ RETURN_CODE build_wordlist (FILE *file)
    /* build wordlist from file */
    while ((ret_code = read_next_word_from_file(file, word)) == RC_NO_ERROR)
    {
-      ret_code = add_new_word_to_wordlist(word);
+      ret_code = add_new_word_to_wordlist(wordlist, word);
 
       if (ret_code != RC_NO_ERROR)
       {

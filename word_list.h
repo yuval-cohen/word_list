@@ -22,7 +22,7 @@ typedef struct _LetterNode
 } LetterNode;
 
 int find_word (LetterNode *wordlist, char *word);
-RETURN_CODE build_wordlist (FILE *file);
+RETURN_CODE build_wordlist (LetterNode **wordlist, FILE *file);
 void free_wordlist (LetterNode *wordlist);
 
 #endif // _WORD_LIST_H_
