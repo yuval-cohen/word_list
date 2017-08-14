@@ -22,18 +22,19 @@ typedef struct _LetterNode
 } LetterNode;
 
 /* word list struct */
-//typedef struct _WordList
-//{
-//	LetterNode *list;
-//   
-//	size_t allocated_bytes;
-//	size_t allocated_Blocks;
-//	size_t freed_Blocks;
-//
-//} WordList;
+typedef struct _WordList
+{
+	/* word list letter tree */
+	LetterNode *letter_tree;
 
-int find_word (LetterNode *wordlist, char *word);
-RETURN_CODE build_wordlist (LetterNode **wordlist, FILE *file);
-void free_wordlist (LetterNode *wordlist);
+	size_t no_of_words;
+	size_t allocated_nodes;
+	size_t freed_nodes;
+
+} WordList;
+
+RETURN_CODE build_wordlist (WordList *word_list, FILE *file);
+int find_word (LetterNode *letter_tree, char *word);
+size_t free_letter_tree (LetterNode *letter_tree);
 
 #endif // _WORD_LIST_H_

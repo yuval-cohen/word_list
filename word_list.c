@@ -8,11 +8,6 @@
 
 #include "word_list.h"
 
-/* statistics */
-static size_t MemoryAllocated_Bytes = 0;
-static size_t MemoryAllocated_Blocks = 0;
-static size_t MemoryFreed_Blocks = 0;
-
 /*
 
  word list as a tree of letter nodes
@@ -28,17 +23,17 @@ static size_t MemoryFreed_Blocks = 0;
  aaliis
 
  Head->a->a.->h.->e->d.
-              |   |
-              |   i->n->g.
-              |   |
-              |   s.
-              |
-              l.->i->i.->s.    
+			  |   |
+			  |   i->n->g.
+			  |   |
+			  |   s.
+			  |
+			  l.->i->i.->s.    
  */
 
 /* word list related local functions */
 static RETURN_CODE read_next_word_from_file (FILE *file, char *word);
-static RETURN_CODE add_new_word_to_wordlist (LetterNode **wordList, char *word);
+static RETURN_CODE add_new_word_to_letter_tree (LetterNode **letter_tree, char *word, size_t *allocated_nodes);
 static LetterNode* new_letter_node (LetterNode **letter_node, char letter, unsigned char is_word);
 
 static RETURN_CODE read_next_word_from_file (FILE *file, char *word)
@@ -87,21 +82,18 @@ static LetterNode* new_letter_node (LetterNode **letter_node, char letter, unsig
    (*letter_node) = (LetterNode*)malloc(sizeof(LetterNode));
    if ((*letter_node) != NULL)
    {
-      (*letter_node)->letter = letter;
-      (*letter_node)->is_word = is_word;
-      (*letter_node)->adjacent = NULL;
-      (*letter_node)->next = NULL;
-
-      MemoryAllocated_Bytes += sizeof(LetterNode);
-      MemoryAllocated_Blocks++;
+	  (*letter_node)->letter = letter;
+	  (*letter_node)->is_word = is_word;
+	  (*letter_node)->adjacent = NULL;
+	  (*letter_node)->next = NULL;
    }
 
    return (*letter_node);
 }
 
-static RETURN_CODE add_new_word_to_wordlist (LetterNode **wordList, char *word)
+static RETURN_CODE add_new_word_to_letter_tree (LetterNode **letter_tree, char *word, size_t *allocated_nodes)
 {
-   LetterNode *nxt_search = (*wordList);
+   LetterNode *nxt_search = (*letter_tree);
    LetterNode *nxt_search_prev;
    LetterNode *adj_search;
    LetterNode *adj_adj_search;
@@ -112,133 +104,135 @@ static RETURN_CODE add_new_word_to_wordlist (LetterNode **wordList, char *word)
    word_len = strlen(word);
    for (i = 0; i < word_len; i++)
    {
-      is_word = (i == (word_len - 1))? 1: 0;
-               
-      /* no letters exist in this depth */
-      if (nxt_search == NULL)
-      {
-         letter_node = new_letter_node(&letter_node, word[i], is_word);
-         if (letter_node == NULL)
-         {
-            return RC_NO_MEM;
-         }
+	  is_word = (i == (word_len - 1))? 1: 0;
+			   
+	  /* no letters exist in this depth */
+	  if (nxt_search == NULL)
+	  {
+		 letter_node = new_letter_node(&letter_node, word[i], is_word);
+		 if (letter_node == NULL)
+		 {
+			return RC_NO_MEM;
+		 }
+		 
+		(*allocated_nodes)++;
 
-         nxt_search = letter_node;
-         
-         /* initialise wordList if the very first letter */
-         if ((*wordList) == NULL)
-         {
-            (*wordList) = letter_node;
-         }
-         else
-         {
-            assert(nxt_search_prev);
+		nxt_search = letter_node;
+		 
+		 /* initialise word list if the very first letter */
+         if ((*letter_tree) == NULL)
+		 {
+            (*letter_tree) = letter_node;
+		 }
+		 else
+		 {
+			assert(nxt_search_prev);
 
-            nxt_search_prev->next = nxt_search;
-         }
+			nxt_search_prev->next = nxt_search;
+		 }
 
-         nxt_search_prev = nxt_search;
-         nxt_search = nxt_search->next;
-      }
-      
-      /* letters do exist in this depth */
-      else
-      {
-         letter_added_to_adjacent = 0;
-         
-         /* search ADJACENT list to find the correct spot to add letter to list (if letter does not exist) - ADJACENT list is kept sorted by letter value */
-         for (adj_search = nxt_search; !letter_added_to_adjacent; adj_search = adj_search->adjacent)
-         {
-            assert(adj_search);
-            adj_adj_search = adj_search->adjacent;
-            
-            if (adj_search->letter == (word[i]))
-            {
-               nxt_search_prev = adj_search;
-               nxt_search = nxt_search_prev->next;
-               letter_added_to_adjacent = 1; /* letter already exists - do nothing */
-            }
-            
-            else if (adj_search->letter < (word[i]))
-            {
-               if (adj_adj_search == NULL)
-               {
-                  /* add letter to the end of ADJACENT list */
-                  letter_node = new_letter_node(&letter_node, word[i], is_word);
-                  if (letter_node == NULL)
-                  {
-                     return RC_NO_MEM;
-                  }
+		 nxt_search_prev = nxt_search;
+		 nxt_search = nxt_search->next;
+	  }
+	  
+	  /* letters do exist in this depth */
+	  else
+	  {
+		 letter_added_to_adjacent = 0;
+		 
+		 /* search ADJACENT list to find the correct spot to add letter to list (if letter does not exist) - ADJACENT list is kept sorted by letter value */
+		 for (adj_search = nxt_search; !letter_added_to_adjacent; adj_search = adj_search->adjacent)
+		 {
+			assert(adj_search);
+			adj_adj_search = adj_search->adjacent;
+			
+			if (adj_search->letter == (word[i]))
+			{
+			   nxt_search_prev = adj_search;
+			   nxt_search = nxt_search_prev->next;
+			   letter_added_to_adjacent = 1; /* letter already exists - do nothing */
+			}
+			
+			else if (adj_search->letter < (word[i]))
+			{
+			   if (adj_adj_search == NULL)
+			   {
+				  /* add letter to the end of ADJACENT list */
+				  letter_node = new_letter_node(&letter_node, word[i], is_word);
+				  if (letter_node == NULL)
+				  {
+					 return RC_NO_MEM;
+				  }
 
-                  adj_search->adjacent = letter_node;
+				  adj_search->adjacent = letter_node;
 
-                  nxt_search_prev = letter_node;
-                  nxt_search = nxt_search_prev->next;
-                  letter_added_to_adjacent = 1;
+				  nxt_search_prev = letter_node;
+				  nxt_search = nxt_search_prev->next;
+				  letter_added_to_adjacent = 1;
 
-               }
-               else if (adj_adj_search->letter > (word[i]))
-               {
-                  /* add letter between adj_search and adj_adj_search */
-                  letter_node = new_letter_node(&letter_node, word[i], is_word);
-                  if (letter_node == NULL)
-                  {
-                     return RC_NO_MEM;
-                  }
+			   }
+			   else if (adj_adj_search->letter > (word[i]))
+			   {
+				  /* add letter between adj_search and adj_adj_search */
+				  letter_node = new_letter_node(&letter_node, word[i], is_word);
+				  if (letter_node == NULL)
+				  {
+					 return RC_NO_MEM;
+				  }
 
-                  adj_search->adjacent = letter_node;
-                  letter_node->adjacent = adj_adj_search;
+				  adj_search->adjacent = letter_node;
+				  letter_node->adjacent = adj_adj_search;
 
-                  nxt_search_prev = letter_node;
-                  nxt_search = nxt_search_prev->next;
-                  letter_added_to_adjacent = 1;
-               }
-               /* else (adj_adj_search->letter <= (word[i])) - to be handled in the next loop iteration */
-            }
-            else /* (adj_search->letter > (word[i])) */
-            {
-               /* add letter at the start of ADJACENT list */
-               letter_node = new_letter_node(&letter_node, word[i], is_word);
-               if (letter_node == NULL)
-               {
-                  return RC_NO_MEM;
-               }
+				  nxt_search_prev = letter_node;
+				  nxt_search = nxt_search_prev->next;
+				  letter_added_to_adjacent = 1;
+			   }
+			   /* else (adj_adj_search->letter <= (word[i])) - to be handled in the next loop iteration */
+			}
+			else /* (adj_search->letter > (word[i])) */
+			{
+			   /* add letter at the start of ADJACENT list */
+			   letter_node = new_letter_node(&letter_node, word[i], is_word);
+			   if (letter_node == NULL)
+			   {
+				  return RC_NO_MEM;
+			   }
 
-               nxt_search_prev->next = letter_node;
-               letter_node->adjacent = nxt_search;
+			   nxt_search_prev->next = letter_node;
+			   letter_node->adjacent = nxt_search;
 
-               nxt_search_prev = letter_node;
-               nxt_search = nxt_search_prev->next;
-               letter_added_to_adjacent = 1;
-            }
-         }
-      }
+			   nxt_search_prev = letter_node;
+			   nxt_search = nxt_search_prev->next;
+			   letter_added_to_adjacent = 1;
+			}
+		 }
+	  }
 
    }
 
    return RC_NO_ERROR;
 }
 
-RETURN_CODE build_wordlist (LetterNode **wordlist, FILE *file)
+RETURN_CODE build_wordlist (WordList *word_list, FILE *file)
 {
    char word[MAX_WORD_LEN+1];
    RETURN_CODE ret_code;
 
-   /* build wordlist from file */
+   /* build word_list from file */
    while ((ret_code = read_next_word_from_file(file, word)) == RC_NO_ERROR)
    {
-      ret_code = add_new_word_to_wordlist(wordlist, word);
-
-      if (ret_code != RC_NO_ERROR)
-      {
-         break;
-      }
+	  ret_code = add_new_word_to_letter_tree(&(word_list->letter_tree), word, &(word_list->allocated_nodes));
+	  if (ret_code != RC_NO_ERROR)
+	  {
+		 break;
+	  }
+	  word_list->no_of_words++;
    }
 
    return ret_code;
 }
 
-int find_word (LetterNode *wordlist, char *word)
+int find_word (LetterNode *letter_tree, char *word)
 {
    size_t word_len;
    LetterNode *search;
@@ -247,12 +241,12 @@ int find_word (LetterNode *wordlist, char *word)
 
    assert(word_len);
    
-   for (search = wordlist; search != NULL; search = search->adjacent)
+   for (search = letter_tree; search != NULL; search = search->adjacent)
    {
-      if (search->letter == word[0])
-      {
-         if (word_len == 1)
-         {
+	  if (search->letter == word[0])
+	  {
+		 if (word_len == 1)
+		 {
 			 if (search->is_word)
 			 {
 				 return WORD_FOUND;
@@ -261,37 +255,39 @@ int find_word (LetterNode *wordlist, char *word)
 			 {
 				 return PREFIX_FOUND;
 			 }
-         }
-         else
-         {
-            return find_word(search->next, word+1);
-         }
-      }
-      else if (search->letter > word[0])
-      {
-         return NOT_FOUND;
-      }
-      /* else - search->letter < word[0] - continue */
+		 }
+		 else
+		 {
+			return find_word(search->next, word+1);
+		 }
+	  }
+	  else if (search->letter > word[0])
+	  {
+		 return NOT_FOUND;
+	  }
+	  /* else - search->letter < word[0] - continue */
    }
 
    return NOT_FOUND;
 }
 
-void free_wordlist (LetterNode *wordlist)
+size_t free_letter_tree (LetterNode *letter_tree)
 {
-   if (wordlist->next != NULL)
-   {
-      free_wordlist(wordlist->next);
-   }
-   
-   if (wordlist->adjacent != NULL)
-   {
-      free_wordlist(wordlist->adjacent);
-   }
-   
-   wordlist->next = NULL;
-   wordlist->adjacent = NULL;
-   free(wordlist);
+	size_t freed_nodes = 0;
+	
+	if (letter_tree->next != NULL)
+	{
+		freed_nodes += free_letter_tree(letter_tree->next);
+	}
 
-   MemoryFreed_Blocks++;
+	if (letter_tree->adjacent != NULL)
+	{
+		freed_nodes += free_letter_tree(letter_tree->adjacent);
+	}
+
+	letter_tree->next = NULL;
+	letter_tree->adjacent = NULL;
+	free(letter_tree);
+
+	return freed_nodes+1;
 }

@@ -11,13 +11,11 @@
 
 //#define _MY_DEBUG_
 
-LetterNode *WordList;
-
 /* grid related local functions */
 static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
 static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char grid_ctrl2[GRID_X_LEN][GRID_Y_LEN]);
-static void print_all_found_words_in_grid (char grid[GRID_X_LEN][GRID_Y_LEN]);
-static void print_all_found_words_from_prefix (char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
+static void print_all_found_words_in_grid (WordList *word_list, char grid[GRID_X_LEN][GRID_Y_LEN]);
+static void print_all_found_words_from_prefix (WordList *word_list, char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
 static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y);
 static void string_to_grid (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN]);
 
@@ -47,7 +45,7 @@ static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char 
 	}
 }
 
-static void print_all_found_words_in_grid (char grid[GRID_X_LEN][GRID_Y_LEN])
+static void print_all_found_words_in_grid (WordList *word_list, char grid[GRID_X_LEN][GRID_Y_LEN])
 {
    char grid_ctrl[GRID_X_LEN][GRID_Y_LEN];
    char word[(GRID_X_LEN*GRID_Y_LEN)+1];
@@ -63,7 +61,7 @@ static void print_all_found_words_in_grid (char grid[GRID_X_LEN][GRID_Y_LEN])
 		   word[0] = grid[i][j];
 		   word[1] = '\0';
 		   
-		   print_all_found_words_from_prefix(grid, word, i, j, grid_ctrl);
+		   print_all_found_words_from_prefix(word_list, grid, word, i, j, grid_ctrl);
 	   }
    }
 }
@@ -99,7 +97,7 @@ static void print_all_found_words_in_grid (char grid[GRID_X_LEN][GRID_Y_LEN])
 *                           |-|-|-|-|
 *                           +-------+
 */
-static void print_all_found_words_from_prefix (char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
+static void print_all_found_words_from_prefix (WordList *word_list, char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
 {
 	char grid_ctrl_next[GRID_X_LEN][GRID_Y_LEN];
 	char word_next[(GRID_X_LEN*GRID_Y_LEN)+1];
@@ -107,7 +105,7 @@ static void print_all_found_words_from_prefix (char grid[GRID_X_LEN][GRID_Y_LEN]
 	size_t word_len;
 	int x, y;
 	
-	word_found = find_word(WordList, word);
+	word_found = find_word(word_list->letter_tree, word);
 	if ((word_found == WORD_FOUND) || (word_found == PREFIX_FOUND))
 	{
 		if (word_found == WORD_FOUND)
@@ -132,7 +130,7 @@ static void print_all_found_words_from_prefix (char grid[GRID_X_LEN][GRID_Y_LEN]
 			copy_grid_ctrl(grid_ctrl_next, grid_ctrl);
 			grid_ctrl_next[x][y] = CELL_USED;
 			
-			print_all_found_words_from_prefix(grid, word_next, x, y, grid_ctrl_next);
+			print_all_found_words_from_prefix(word_list, grid, word_next, x, y, grid_ctrl_next);
 		}
 	}
 	/* else: NOT_FOUND - no need to check further this prefix */
@@ -262,6 +260,7 @@ static void string_to_grid (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN
 
 int main (int argc, char* argv[])
 {
+	WordList word_list;
 	RETURN_CODE ret_code;
 	FILE *input_file;
 	char grid[GRID_X_LEN][GRID_Y_LEN];
@@ -286,7 +285,12 @@ int main (int argc, char* argv[])
 		}
 		else
 		{
-			ret_code = build_wordlist(&WordList, input_file);
+			word_list.letter_tree = NULL;
+			word_list.no_of_words = 0;
+			word_list.allocated_nodes = 0;
+			word_list.freed_nodes = 0;
+			
+			ret_code = build_wordlist(&word_list, input_file);
 
 			if (ret_code == RC_EOF)
 			{
@@ -296,12 +300,12 @@ int main (int argc, char* argv[])
 				string_to_grid("mikayuvaaahlmich", grid); // aahebcidbengmika, abombanilenesess, mikayuvaaahlmich
 #endif
 			 
-				print_all_found_words_in_grid(grid);
+				print_all_found_words_in_grid(&word_list, grid);
 			 
 				ret_code = RC_NO_ERROR;
 			}
 		 
-			free_wordlist(WordList);
+			word_list.freed_nodes = free_letter_tree(word_list.letter_tree);
 
 			fclose(input_file);
 		}
