@@ -113,7 +113,6 @@ static RETURN_CODE add_new_word_to_letter_tree (LetterNode **letter_tree, char *
 		 {
 			return RC_NO_MEM;
 		 }
-		 
 		(*allocated_nodes)++;
 
 		nxt_search = letter_node;
@@ -162,6 +161,7 @@ static RETURN_CODE add_new_word_to_letter_tree (LetterNode **letter_tree, char *
 				  {
 					 return RC_NO_MEM;
 				  }
+				  (*allocated_nodes)++;
 
 				  adj_search->adjacent = letter_node;
 
@@ -178,6 +178,7 @@ static RETURN_CODE add_new_word_to_letter_tree (LetterNode **letter_tree, char *
 				  {
 					 return RC_NO_MEM;
 				  }
+				  (*allocated_nodes)++;
 
 				  adj_search->adjacent = letter_node;
 				  letter_node->adjacent = adj_adj_search;
@@ -196,6 +197,7 @@ static RETURN_CODE add_new_word_to_letter_tree (LetterNode **letter_tree, char *
 			   {
 				  return RC_NO_MEM;
 			   }
+			   (*allocated_nodes)++;
 
 			   nxt_search_prev->next = letter_node;
 			   letter_node->adjacent = nxt_search;
