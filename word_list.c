@@ -220,6 +220,12 @@ RETURN_CODE build_wordlist (WordList *word_list, FILE *file)
 	char word[MAX_WORD_LEN+1];
 	RETURN_CODE ret_code;
 
+	/* init word_list */ 
+	word_list->letter_tree = NULL;
+	word_list->no_of_words = 0;
+	word_list->allocated_nodes = 0;
+	word_list->freed_nodes = 0;
+
 	/* build word_list from file */
 	while ((ret_code = read_next_word_from_file(file, read_buffer, word)) == RC_NO_ERROR)
 	{

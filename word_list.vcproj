@@ -178,6 +178,10 @@
 				RelativePath=".\word_list.c"
 				>
 			</File>
+			<File
+				RelativePath=".\words_grid.c"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -194,6 +198,10 @@
 			</File>
 			<File
 				RelativePath=".\word_list.h"
+				>
+			</File>
+			<File
+				RelativePath=".\words_grid.h"
 				>
 			</File>
 		</Filter>
