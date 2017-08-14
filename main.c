@@ -15,10 +15,9 @@
 
 int main (int argc, char* argv[])
 {
-	WordList word_list;
+	WordsGrid words_grid;
 	RETURN_CODE ret_code;
 	FILE *input_file;
-	char grid[GRID_X_LEN][GRID_Y_LEN];
 
 #ifndef _MY_DEBUG_
 	if ((argc != 3) || (strlen(argv[2]) != (GRID_X_LEN*GRID_Y_LEN)))
@@ -40,22 +39,22 @@ int main (int argc, char* argv[])
 		}
 		else
 		{
-			ret_code = build_wordlist(&word_list, input_file);
+			ret_code = build_wordlist(&(words_grid.word_list), input_file);
 
 			if (ret_code == RC_EOF)
 			{
 #ifndef _MY_DEBUG_
-				string_to_grid(argv[2], grid);
+				init_grid_from_string(argv[2], words_grid.grid);
 #else
-				string_to_grid("mikayuvaaahlmich", grid); // aahebcidbengmika, abombanilenesess, mikayuvaaahlmich
+				init_grid_from_string("mikayuvaaahlmich", words_grid.grid); // aahebcidbengmika, abombanilenesess, mikayuvaaahlmich
 #endif
 			 
-				print_all_found_words_in_grid(&word_list, grid);
+				output_found_words_in_grid(&(words_grid.word_list), words_grid.grid);
 			 
 				ret_code = RC_NO_ERROR;
 			}
 		 
-			word_list.freed_nodes = free_letter_tree(word_list.letter_tree);
+			words_grid.word_list.freed_nodes = free_letter_tree(words_grid.word_list.letter_tree);
 
 			fclose(input_file);
 		}

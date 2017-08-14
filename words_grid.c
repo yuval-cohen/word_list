@@ -219,7 +219,7 @@ static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_
 *                                                                         +-------+
 *
 */
-void string_to_grid (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN])
+void init_grid_from_string (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN])
 {
 	int i, j, h = 0;
 	
@@ -234,7 +234,7 @@ void string_to_grid (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN])
 	}
 }
 
-void print_all_found_words_in_grid (WordList *word_list, char grid[GRID_X_LEN][GRID_Y_LEN])
+void output_found_words_in_grid (WordList *word_list, char grid[GRID_X_LEN][GRID_Y_LEN])
 {
    char grid_ctrl[GRID_X_LEN][GRID_Y_LEN];
    char word[(GRID_X_LEN*GRID_Y_LEN)+1];
