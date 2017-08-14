@@ -8,9 +8,6 @@
 
 #include "word_list.h"
 
-/* buffer for read from input file */
-static char ReadBuffer[READ_BUF_SIZE] = {0};
-
 /* statistics */
 static size_t MemoryAllocated_Bytes = 0;
 static size_t MemoryAllocated_Blocks = 0;
@@ -46,40 +43,41 @@ static LetterNode* new_letter_node (LetterNode **letter_node, char letter, unsig
 
 static RETURN_CODE read_next_word_from_file (FILE *file, char *word)
 {
+	char read_buffer[READ_BUF_SIZE] = {0};
 	char *new_line_ptr;
 	size_t read_bytes, cur_length, word_len;
 
-	new_line_ptr = strstr(ReadBuffer, "\n");
+	new_line_ptr = strstr(read_buffer, "\n");
 	if (new_line_ptr == NULL)
 	{
-		/* read another block from file into ReadBuffer */
-		cur_length = strlen(ReadBuffer);
+		/* read another block from file into read_buffer */
+		cur_length = strlen(read_buffer);
 		if ((cur_length +1 + READ_BLOCK_LEN) > READ_BUF_SIZE)
 		{
 			return RC_BAD_FORMAT;
 		}
-		read_bytes = fread(ReadBuffer+strlen(ReadBuffer), 1, READ_BLOCK_LEN, file);
-		new_line_ptr = strstr(ReadBuffer, "\n");
+		read_bytes = fread(read_buffer+strlen(read_buffer), 1, READ_BLOCK_LEN, file);
+		new_line_ptr = strstr(read_buffer, "\n");
 		if ((read_bytes == 0) || (new_line_ptr == NULL))
 		{
 			return RC_EOF;
 		}
-		*(ReadBuffer+cur_length+read_bytes) = '\0';
+		*(read_buffer+cur_length+read_bytes) = '\0';
    }
 
 	/* check word length does not exceed maximum */
-	word_len = new_line_ptr - ReadBuffer;
+	word_len = new_line_ptr - read_buffer;
 	if (word_len > MAX_WORD_LEN)
 	{
 		return RC_BAD_FORMAT;
 	}
    
-	/* copy next line into from ReadBuffer into line */
-	strncpy(word, ReadBuffer, new_line_ptr-ReadBuffer);
-	word[new_line_ptr-ReadBuffer] = '\0';
+	/* copy next line into from read_buffer into line */
+	strncpy(word, read_buffer, new_line_ptr-read_buffer);
+	word[new_line_ptr-read_buffer] = '\0';
 
-	/* erase it from ReadBuffer - can be optimized */
-	memmove(ReadBuffer, new_line_ptr+1, strlen(new_line_ptr+1)+1);
+	/* erase it from read_buffer - can be optimized */
+	memmove(read_buffer, new_line_ptr+1, strlen(new_line_ptr+1)+1);
 	
 	return RC_NO_ERROR;
 }

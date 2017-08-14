@@ -21,6 +21,17 @@ typedef struct _LetterNode
 
 } LetterNode;
 
+/* word list struct */
+//typedef struct _WordList
+//{
+//	LetterNode *list;
+//   
+//	size_t allocated_bytes;
+//	size_t allocated_Blocks;
+//	size_t freed_Blocks;
+//
+//} WordList;
+
 int find_word (LetterNode *wordlist, char *word);
 RETURN_CODE build_wordlist (LetterNode **wordlist, FILE *file);
 void free_wordlist (LetterNode *wordlist);
