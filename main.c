@@ -13,6 +13,13 @@
 
 //#define _MY_DEBUG_
 
+static words_grid_output_func (char *word);
+
+static words_grid_output_func (char *word)
+{
+	printf("%s\n", word);
+}
+
 int main (int argc, char* argv[])
 {
 	WordsGrid words_grid;
@@ -48,8 +55,9 @@ int main (int argc, char* argv[])
 #else
 				init_grid_from_string("mikayuvaaahlmich", words_grid.grid); // aahebcidbengmika, abombanilenesess, mikayuvaaahlmich
 #endif
-			 
-				output_found_words_in_grid(&(words_grid.word_list), words_grid.grid);
+
+				set_output_func(&words_grid, words_grid_output_func);
+				output_found_words_in_grid(&words_grid);
 			 
 				ret_code = RC_NO_ERROR;
 			}

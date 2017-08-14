@@ -13,7 +13,7 @@
 /* grid related local functions */
 static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
 static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char grid_ctrl2[GRID_X_LEN][GRID_Y_LEN]);
-static void print_all_found_words_from_prefix (WordList *word_list, char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
+static void print_all_found_words_from_prefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
 static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y);
 
 static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
@@ -73,7 +73,7 @@ static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char 
 *                           |-|-|-|-|
 *                           +-------+
 */
-static void print_all_found_words_from_prefix (WordList *word_list, char grid[GRID_X_LEN][GRID_Y_LEN], char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
+static void print_all_found_words_from_prefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
 {
 	char grid_ctrl_next[GRID_X_LEN][GRID_Y_LEN];
 	char word_next[(GRID_X_LEN*GRID_Y_LEN)+1];
@@ -81,12 +81,12 @@ static void print_all_found_words_from_prefix (WordList *word_list, char grid[GR
 	size_t word_len;
 	int x, y;
 	
-	word_found = find_word(word_list->letter_tree, word);
+	word_found = find_word(words_grid->word_list.letter_tree, word);
 	if ((word_found == WORD_FOUND) || (word_found == PREFIX_FOUND))
 	{
 		if (word_found == WORD_FOUND)
 		{
-			printf("%s\n", word);
+			words_grid->output_func(word);
 		}
 		
 		/* init x and y to i and j */
@@ -99,14 +99,14 @@ static void print_all_found_words_from_prefix (WordList *word_list, char grid[GR
 			/* prepare the next work */
 			word_len = strlen(word);
 			strcpy(word_next, word);
-			word_next[word_len] = grid[x][y];
+			word_next[word_len] = words_grid->grid[x][y];
 			word_next[word_len+1] = '\0';
 			
 			/* prepare the next grid ctrl */
 			copy_grid_ctrl(grid_ctrl_next, grid_ctrl);
 			grid_ctrl_next[x][y] = CELL_USED;
 			
-			print_all_found_words_from_prefix(word_list, grid, word_next, x, y, grid_ctrl_next);
+			print_all_found_words_from_prefix(words_grid, word_next, x, y, grid_ctrl_next);
 		}
 	}
 	/* else: NOT_FOUND - no need to check further this prefix */
@@ -234,7 +234,12 @@ void init_grid_from_string (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN
 	}
 }
 
-void output_found_words_in_grid (WordList *word_list, char grid[GRID_X_LEN][GRID_Y_LEN])
+void set_output_func (WordsGrid *words_grid, void (*output_func) (char *word))
+{
+	words_grid->output_func = output_func;
+}
+
+void output_found_words_in_grid (WordsGrid *words_grid)
 {
    char grid_ctrl[GRID_X_LEN][GRID_Y_LEN];
    char word[(GRID_X_LEN*GRID_Y_LEN)+1];
@@ -247,10 +252,10 @@ void output_found_words_in_grid (WordList *word_list, char grid[GRID_X_LEN][GRID
 		   init_grid_ctrl(grid_ctrl);
 		   grid_ctrl[i][j] = CELL_USED;
 		   
-		   word[0] = grid[i][j];
+		   word[0] = words_grid->grid[i][j];
 		   word[1] = '\0';
 		   
-		   print_all_found_words_from_prefix(word_list, grid, word, i, j, grid_ctrl);
+		   print_all_found_words_from_prefix(words_grid, word, i, j, grid_ctrl);
 	   }
    }
 }
