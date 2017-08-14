@@ -32,13 +32,12 @@
  */
 
 /* word list related local functions */
-static RETURN_CODE read_next_word_from_file (FILE *file, char *word);
+static RETURN_CODE read_next_word_from_file (FILE *file, char read_buffer[READ_BUF_SIZE], char *word);
 static RETURN_CODE add_new_word_to_letter_tree (LetterNode **letter_tree, char *word, size_t *allocated_nodes);
 static LetterNode* new_letter_node (LetterNode **letter_node, char letter, unsigned char is_word);
 
-static RETURN_CODE read_next_word_from_file (FILE *file, char *word)
+static RETURN_CODE read_next_word_from_file (FILE *file, char read_buffer[READ_BUF_SIZE], char *word)
 {
-	char read_buffer[READ_BUF_SIZE] = {0};
 	char *new_line_ptr;
 	size_t read_bytes, cur_length, word_len;
 
@@ -215,21 +214,22 @@ static RETURN_CODE add_new_word_to_letter_tree (LetterNode **letter_tree, char *
 
 RETURN_CODE build_wordlist (WordList *word_list, FILE *file)
 {
-   char word[MAX_WORD_LEN+1];
-   RETURN_CODE ret_code;
+	char read_buffer[READ_BUF_SIZE] = {0};
+	char word[MAX_WORD_LEN+1];
+	RETURN_CODE ret_code;
 
-   /* build word_list from file */
-   while ((ret_code = read_next_word_from_file(file, word)) == RC_NO_ERROR)
-   {
+	/* build word_list from file */
+	while ((ret_code = read_next_word_from_file(file, read_buffer, word)) == RC_NO_ERROR)
+	{
 	  ret_code = add_new_word_to_letter_tree(&(word_list->letter_tree), word, &(word_list->allocated_nodes));
 	  if (ret_code != RC_NO_ERROR)
 	  {
 		 break;
 	  }
 	  word_list->no_of_words++;
-   }
+	}
 
-   return ret_code;
+	return ret_code;
 }
 
 int find_word (LetterNode *letter_tree, char *word)
