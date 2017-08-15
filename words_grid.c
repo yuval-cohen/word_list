@@ -13,7 +13,7 @@
 /* grid related local functions */
 static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
 static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char grid_ctrl2[GRID_X_LEN][GRID_Y_LEN]);
-static void print_all_found_words_from_prefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
+static void output_found_words_from_prefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
 static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y);
 
 static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
@@ -73,7 +73,7 @@ static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char 
 *                           |-|-|-|-|
 *                           +-------+
 */
-static void print_all_found_words_from_prefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
+static void output_found_words_from_prefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
 {
 	char grid_ctrl_next[GRID_X_LEN][GRID_Y_LEN];
 	char word_next[(GRID_X_LEN*GRID_Y_LEN)+1];
@@ -93,7 +93,7 @@ static void print_all_found_words_from_prefix (WordsGrid *words_grid, char *word
 		x = i;
 		y = j;
 
-		/* in a loop: 1) find next adjacent cell 2) recursive call to print_all_found_words_from_prefix */
+		/* in a loop: 1) find next adjacent cell 2) recursive call to output_found_words_from_prefix */
 		while (get_next_adjacent_unused_cell(grid_ctrl,i,j,&x,&y))
 		{
 			/* prepare the next work */
@@ -106,7 +106,7 @@ static void print_all_found_words_from_prefix (WordsGrid *words_grid, char *word
 			copy_grid_ctrl(grid_ctrl_next, grid_ctrl);
 			grid_ctrl_next[x][y] = CELL_USED;
 			
-			print_all_found_words_from_prefix(words_grid, word_next, x, y, grid_ctrl_next);
+			output_found_words_from_prefix(words_grid, word_next, x, y, grid_ctrl_next);
 		}
 	}
 	/* else: NOT_FOUND - no need to check further this prefix */
@@ -255,7 +255,7 @@ void output_found_words_in_grid (WordsGrid *words_grid)
 		   word[0] = words_grid->grid[i][j];
 		   word[1] = '\0';
 		   
-		   print_all_found_words_from_prefix(words_grid, word, i, j, grid_ctrl);
+		   output_found_words_from_prefix(words_grid, word, i, j, grid_ctrl);
 	   }
    }
 }

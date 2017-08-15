@@ -19,17 +19,6 @@ typedef struct _WordsGrid
 	/* output function to be used for all found words in grid */
 	void (*output_func) (char *word);
 	
-	/* control (used/unused) grid */
-	char grid_ctrl[GRID_X_LEN][GRID_Y_LEN];
-	
-	/* current cell (last letter of current prefix/word) x and y indices  */
-	int cur_cell_x;
-	int cur_cell_y;
-	
-	/* next adjacent unused cell (next letter from the current prefix/word) x and y indices  */
-	int next_adj_x;
-	int next_adj_y;
-
 } WordsGrid;
 
 void init_grid_from_string (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN]);
