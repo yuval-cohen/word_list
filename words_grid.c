@@ -118,7 +118,7 @@ static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i
 	size_t word_len;
 	int x, y;
 	
-	word_found = find_word(words_grid->word_list.char_tree, word);
+	word_found = WordList_FindWord(words_grid->word_list.char_tree, word);
 	if ((word_found == WORD_FOUND) || (word_found == PREFIX_FOUND))
 	{
 		if (word_found == WORD_FOUND)
@@ -251,7 +251,7 @@ static int getNextAdjacentUnusedCell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LE
 /*******************************************************************************************************************************************************/
 RETURN_CODE WordsGrid_InitWordList (WordsGrid *words_grid, FILE *file)
 {
-	return build_wordlist(&(words_grid->word_list), file);
+	return WordList_BuildCharTree(&(words_grid->word_list), file);
 }
 
 void WordsGrid_SetGrid (WordsGrid *words_grid, const char *string)
@@ -297,5 +297,5 @@ void WordsGrid_OutputFoundWords (WordsGrid *words_grid)
 
 void WordsGrid_Free (WordsGrid *words_grid)
 {
-	words_grid->word_list.freed_nodes = free_char_tree(words_grid->word_list.char_tree);
+	words_grid->word_list.freed_nodes = WordList_FreeCharTree(words_grid->word_list.char_tree);
 }

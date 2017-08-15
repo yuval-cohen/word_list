@@ -9,8 +9,7 @@
 #include "word_list.h"
 
 /*
-
- word list as a tree of character nodes
+ CONCEPT: word list as a tree of character nodes
 
  e.g. word list with the following words (. means IS_WORD is true; -> mean NEXT pointer; | (n times) means ADJACENT pointer): 
  aa
@@ -31,12 +30,30 @@
 			  l.->i->i.->s.    
  */
 
-/* word list related local functions */
+/*******************************************************************************************************************************************************/
+/************************************************************ internal functions declation *************************************************************/
+/*******************************************************************************************************************************************************/
 static RETURN_CODE read_next_word_from_file (FILE *file, char read_buffer[READ_BUF_SIZE], char *word);
 static RETURN_CODE add_new_word_to_char_tree (CharNode **char_tree, char *word, size_t *allocated_nodes);
 static CharNode* new_char_node (CharNode **char_node, char ch, unsigned char is_word);
 
-static RETURN_CODE read_next_word_from_file (FILE *file, char read_buffer[READ_BUF_SIZE], char *word)
+/*******************************************************************************************************************************************************/
+/************************************************************ internal functions definition ************************************************************/
+/*******************************************************************************************************************************************************/
+/***********************************************************************************************************************
+ *                                                                                                                     *
+ * FUNCTION: read_next_word_from_file                                                                                  *
+ *                                                                                                                     *
+ * DESCRIPTION:                                                                                                        *
+ *                                                                                                                     *
+ * PARAMETERS:                                                                                                         *
+ *                                                                                                                     *
+ * RETURN:                                                                                                             *
+ *                                                                                                                     *
+ * NOTES:                                                                                                              *
+ *                                                                                                                     *
+ ***********************************************************************************************************************/
+ static RETURN_CODE read_next_word_from_file (FILE *file, char read_buffer[READ_BUF_SIZE], char *word)
 {
 	char *new_line_ptr;
 	size_t read_bytes, cur_length, word_len;
@@ -76,6 +93,19 @@ static RETURN_CODE read_next_word_from_file (FILE *file, char read_buffer[READ_B
 	return RC_NO_ERROR;
 }
 
+/***********************************************************************************************************************
+ *                                                                                                                     *
+ * FUNCTION: new_char_node                                                                                             *
+ *                                                                                                                     *
+ * DESCRIPTION:                                                                                                        *
+ *                                                                                                                     *
+ * PARAMETERS:                                                                                                         *
+ *                                                                                                                     *
+ * RETURN:                                                                                                             *
+ *                                                                                                                     *
+ * NOTES:                                                                                                              *
+ *                                                                                                                     *
+ ***********************************************************************************************************************/
 static CharNode* new_char_node (CharNode **char_node, char ch, unsigned char is_word)
 {
    (*char_node) = (CharNode*)malloc(sizeof(CharNode));
@@ -90,6 +120,19 @@ static CharNode* new_char_node (CharNode **char_node, char ch, unsigned char is_
    return (*char_node);
 }
 
+/***********************************************************************************************************************
+ *                                                                                                                     *
+ * FUNCTION: add_new_word_to_char_tree                                                                                 *
+ *                                                                                                                     *
+ * DESCRIPTION:                                                                                                        *
+ *                                                                                                                     *
+ * PARAMETERS:                                                                                                         *
+ *                                                                                                                     *
+ * RETURN:                                                                                                             *
+ *                                                                                                                     *
+ * NOTES:                                                                                                              *
+ *                                                                                                                     *
+ ***********************************************************************************************************************/
 static RETURN_CODE add_new_word_to_char_tree (CharNode **char_tree, char *word, size_t *allocated_nodes)
 {
    CharNode *nxt_search = (*char_tree);
@@ -214,7 +257,10 @@ static RETURN_CODE add_new_word_to_char_tree (CharNode **char_tree, char *word, 
    return RC_NO_ERROR;
 }
 
-RETURN_CODE build_wordlist (WordList *word_list, FILE *file)
+/*******************************************************************************************************************************************************/
+/************************************************************ external functions definition ************************************************************/
+/*******************************************************************************************************************************************************/
+RETURN_CODE WordList_BuildCharTree (WordList *word_list, FILE *file)
 {
 	char read_buffer[READ_BUF_SIZE] = {0};
 	char word[MAX_WORD_LEN+1];
@@ -240,7 +286,7 @@ RETURN_CODE build_wordlist (WordList *word_list, FILE *file)
 	return ret_code;
 }
 
-int find_word (CharNode *char_tree, char *word)
+int WordList_FindWord (CharNode *char_tree, char *word)
 {
    size_t word_len;
    CharNode *search;
@@ -266,7 +312,7 @@ int find_word (CharNode *char_tree, char *word)
 		 }
 		 else
 		 {
-			return find_word(search->next, word+1);
+			return WordList_FindWord(search->next, word+1);
 		 }
 	  }
 	  else if (search->ch > word[0])
@@ -279,18 +325,18 @@ int find_word (CharNode *char_tree, char *word)
    return NOT_FOUND;
 }
 
-size_t free_char_tree (CharNode *char_tree)
+size_t WordList_FreeCharTree (CharNode *char_tree)
 {
 	size_t freed_nodes = 0;
 	
 	if (char_tree->next != NULL)
 	{
-		freed_nodes += free_char_tree(char_tree->next);
+		freed_nodes += WordList_FreeCharTree(char_tree->next);
 	}
 
 	if (char_tree->adjacent != NULL)
 	{
-		freed_nodes += free_char_tree(char_tree->adjacent);
+		freed_nodes += WordList_FreeCharTree(char_tree->adjacent);
 	}
 
 	char_tree->next = NULL;

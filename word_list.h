@@ -33,8 +33,49 @@ typedef struct _WordList
 
 } WordList;
 
-RETURN_CODE build_wordlist (WordList *word_list, FILE *file);
-int find_word (CharNode *char_tree, char *word);
-size_t free_char_tree (CharNode *char_tree);
+/***********************************************************************************************************************
+ *                                                                                                                     *
+ * FUNCTION: WordList_BuildCharTree                                                                                    *
+ *                                                                                                                     *
+ * DESCRIPTION:                                                                                                        *
+ *                                                                                                                     *
+ * PARAMETERS:                                                                                                         *
+ *                                                                                                                     *
+ * RETURN:                                                                                                             *
+ *                                                                                                                     *
+ * NOTES:                                                                                                              *
+ *                                                                                                                     *
+ ***********************************************************************************************************************/
+RETURN_CODE WordList_BuildCharTree (WordList *word_list, FILE *file);
+
+/***********************************************************************************************************************
+ *                                                                                                                     *
+ * FUNCTION: WordList_FindWord                                                                                         *
+ *                                                                                                                     *
+ * DESCRIPTION:                                                                                                        *
+ *                                                                                                                     *
+ * PARAMETERS:                                                                                                         *
+ *                                                                                                                     *
+ * RETURN:                                                                                                             *
+ *                                                                                                                     *
+ * NOTES:                                                                                                              *
+ *                                                                                                                     *
+ ***********************************************************************************************************************/
+int WordList_FindWord (CharNode *char_tree, char *word);
+
+/***********************************************************************************************************************
+ *                                                                                                                     *
+ * FUNCTION: WordList_FreeCharTree                                                                                     *
+ *                                                                                                                     *
+ * DESCRIPTION:                                                                                                        *
+ *                                                                                                                     *
+ * PARAMETERS:                                                                                                         *
+ *                                                                                                                     *
+ * RETURN:                                                                                                             *
+ *                                                                                                                     *
+ * NOTES:                                                                                                              *
+ *                                                                                                                     *
+ ***********************************************************************************************************************/
+size_t WordList_FreeCharTree (CharNode *char_tree);
 
 #endif // _WORD_LIST_H_
