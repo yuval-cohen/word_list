@@ -10,22 +10,22 @@
 
 #define MAX_WORD_LEN	50
 
-/* single letter node */
-typedef struct _LetterNode 
+/* character node struct */
+typedef struct _CharNode 
 {
-   char letter;
+   char ch;
    unsigned char is_word;
 
-   struct _LetterNode *adjacent;
-   struct _LetterNode *next;
+   struct _CharNode *adjacent;
+   struct _CharNode *next;
 
-} LetterNode;
+} CharNode;
 
 /* word list struct */
 typedef struct _WordList
 {
-	/* word list letter tree */
-	LetterNode *letter_tree;
+	/* word list character tree */
+	CharNode *char_tree;
 
 	size_t no_of_words;
 	size_t allocated_nodes;
@@ -34,7 +34,7 @@ typedef struct _WordList
 } WordList;
 
 RETURN_CODE build_wordlist (WordList *word_list, FILE *file);
-int find_word (LetterNode *letter_tree, char *word);
-size_t free_letter_tree (LetterNode *letter_tree);
+int find_word (CharNode *char_tree, char *word);
+size_t free_char_tree (CharNode *char_tree);
 
 #endif // _WORD_LIST_H_

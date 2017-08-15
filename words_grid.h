@@ -15,7 +15,7 @@ typedef struct _WordsGrid
 	/* word list to search words from */
 	WordList word_list;
 	
-	/* letters grid */
+	/* characters grid */
 	char grid[GRID_X_LEN][GRID_Y_LEN];
 	
 	/* output function to be used for all found words in grid */

@@ -91,9 +91,9 @@ static void gridCopy (char grid_dest[GRID_X_LEN][GRID_Y_LEN], const char grid_sr
  *                                                                                                                     *
  *             word - (in) prefix string, e.g.: "aband"                                                                *
  *                                                                                                                     *
- *             i,j - (in) the x,y indices of the last letter of prefix, e.g.: (1,3)                                    *
+ *             i,j - (in) the x,y indices of the last character of prefix, e.g.: (1,3)                                 *
  *                                                                                                                     *
- *             grid_ctrl - (in) grid control that marks which letters are used (part of prefix) and which aren't e.g.: *
+ *             grid_ctrl - (in) grid control that marks which characters are used (part of prefix) and which aren't    *
  *                                                                                  e.g.: (x = used; o = unused)       *
  *                                                                                  +-------+                          *
  *                                                                                  |x|x|x|x|                          *
@@ -118,7 +118,7 @@ static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i
 	size_t word_len;
 	int x, y;
 	
-	word_found = find_word(words_grid->word_list.letter_tree, word);
+	word_found = find_word(words_grid->word_list.char_tree, word);
 	if ((word_found == WORD_FOUND) || (word_found == PREFIX_FOUND))
 	{
 		if (word_found == WORD_FOUND)
@@ -155,7 +155,7 @@ static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i
  *                                                                                                                     *
  * DESCRIPTION: get next adjecent unused cell                                                                          *
  *                                                                                                                     *
- * PARAMETERS: grid_ctrl - (in) grid control that marks which letters are used and which aren't e.g.:                  *
+ * PARAMETERS: grid_ctrl - (in) grid control that marks which characters are used and which aren't e.g.:               *
  *                           (x = used; o = unused):                                                                   *
  *                           +-------+                                                                                 *
  *                           |x|x|x|x|                                                                                 *
@@ -167,9 +167,9 @@ static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i
  *                           |o|o|o|o|                                                                                 *
  *                           +-------+                                                                                 *
  *                                                                                                                     *
- *             i,j - (in) the x,y indices of the letter to find the next adjacent unused cell from                     *
+ *             i,j - (in) the x,y indices of the character to find the next adjacent unused cell from                  *
  *                                                                                                                     *
- *             x,y - (out) the indices of next unused adjacent letter                                                  *
+ *             x,y - (out) the indices of next unused adjacent character                                               *
  *                                                                                                                     *
  * RETURN: 0 - cell not found                                                                                          *
  *         1 - cell found                                                                                              *
@@ -297,5 +297,5 @@ void WordsGrid_OutputFoundWords (WordsGrid *words_grid)
 
 void WordsGrid_Free (WordsGrid *words_grid)
 {
-	words_grid->word_list.freed_nodes = free_letter_tree(words_grid->word_list.letter_tree);
+	words_grid->word_list.freed_nodes = free_char_tree(words_grid->word_list.char_tree);
 }
