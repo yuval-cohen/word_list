@@ -5,9 +5,7 @@
 #include <ctype.h>
 
 #include "gen_defs.h"
-#include "word_list.h"
 #include "words_grid.h"
-
 
 #include "main.h"
 
@@ -46,23 +44,23 @@ int main (int argc, char* argv[])
 		}
 		else
 		{
-			ret_code = build_wordlist(&(words_grid.word_list), input_file);
+			ret_code = WordsGrid_InitWordList(&words_grid, input_file);
 
 			if (ret_code == RC_EOF)
 			{
 #ifndef _MY_DEBUG_
-				init_grid_from_string(argv[2], words_grid.grid);
+				WordsGrid_SetGrid(&words_grid, argv[2]);
 #else
-				init_grid_from_string("mikayuvaaahlmich", words_grid.grid); // aahebcidbengmika, abombanilenesess, mikayuvaaahlmich
+				WordsGrid_SetGrid(&words_grid, "mikayuvaaahlmich"); // more examples: aahebcidbengmika, abombanilenesess, mikayuvaaahlmich
 #endif
 
-				set_output_func(&words_grid, words_grid_output_func);
-				output_found_words_in_grid(&words_grid);
+				WordsGrid_SetOutputFunc(&words_grid, words_grid_output_func);
+				WordsGrid_OutputFoundWords(&words_grid);
 			 
 				ret_code = RC_NO_ERROR;
 			}
 		 
-			words_grid.word_list.freed_nodes = free_letter_tree(words_grid.word_list.letter_tree);
+			WordsGrid_Free(&words_grid);
 
 			fclose(input_file);
 		}

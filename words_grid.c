@@ -9,14 +9,31 @@
 
 #include "words_grid.h"
 
+/*******************************************************************************************************************************************************/
+/************************************************************ internal functions declation *************************************************************/
+/*******************************************************************************************************************************************************/
+static void initGridCtrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
+static void gridCopy (char grid_dest[GRID_X_LEN][GRID_Y_LEN], const char grid_src[GRID_X_LEN][GRID_Y_LEN]);
+static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
+static int getNextAdjacentUnusedCell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y);
 
-/* grid related local functions */
-static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
-static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char grid_ctrl2[GRID_X_LEN][GRID_Y_LEN]);
-static void output_found_words_from_prefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
-static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y);
+/*******************************************************************************************************************************************************/
+/************************************************************ internal functions definition ************************************************************/
+/*******************************************************************************************************************************************************/
 
-static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
+/**********************************************************************************************************************
+ * FUNCTION: initGridCtrl                                                                                             *
+ *                                                                                                                    *
+ * DESCRIPTION: initialise grid control to cell-unused                                                                *
+ *                                                                                                                    *
+ * PARAMETERS: (in/out) grid_ctrl                                                                                     *
+ *                                                                                                                    *
+ * RETURN: none                                                                                                       *
+ *                                                                                                                    *
+ * NOTES:                                                                                                             *
+ *                                                                                                                    *
+ **********************************************************************************************************************/
+static void initGridCtrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
 {
 	int i, j;
    
@@ -29,7 +46,20 @@ static void init_grid_ctrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
 	}
 }
 
-static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char grid_ctrl2[GRID_X_LEN][GRID_Y_LEN])
+/**********************************************************************************************************************
+ * FUNCTION: gridCopy                                                                                                 *
+ *                                                                                                                    *
+ * DESCRIPTION: copy one grid to another                                                                              *
+ *                                                                                                                    *
+ * PARAMETERS: (out) grid_dest - destination grid                                                                     *
+ *             (in)  grid_src - source grid                                                                           *
+ *                                                                                                                    *
+ * RETURN: none                                                                                                       *
+ *                                                                                                                    *
+ * NOTES:                                                                                                             *
+ *                                                                                                                    *
+ *********************************************************************************************************************/
+static void gridCopy (char grid_dest[GRID_X_LEN][GRID_Y_LEN], const char grid_src[GRID_X_LEN][GRID_Y_LEN])
 {
 	int i, j;
    
@@ -37,43 +67,50 @@ static void copy_grid_ctrl (char grid_ctrl1[GRID_X_LEN][GRID_Y_LEN], const char 
 	{
 		for (j = 0; j < GRID_Y_LEN; j++)
 		{
-			grid_ctrl1[i][j] = grid_ctrl2[i][j];
+			grid_dest[i][j] = grid_src[i][j];
 		}
 	}
 }
 
-/*
-* description: print all found words that start with the prefix word and that exists on the grid
-*
-* parameters:
-*
-* grid: - letters grid, e.g.         
-*                           +-------+ 
-*                           |a|b|a|n|
-*                           +-------+
-*                           |s|d|f|d|
-*                           +-------+
-*                           |g|h|j|o|
-*                           +-------+
-*                           |k|l|n|z|
-*                           +-------+
-*
-* word: prefix string, e.g.: "aband"
-*
-* i,j: the x,y indices of word last letter, e.g.: (1,3)
-*
-* grid_ctrl: grid control that marks which letters are used (as part of word) and which aren't e.g. (x=used; -=unused):
-*                           +-------+ 
-*                           |x|x|x|x|
-*                           +-------+
-*                           |-|-|-|x|
-*                           +-------+
-*                           |-|-|-|-|
-*                           +-------+
-*                           |-|-|-|-|
-*                           +-------+
-*/
-static void output_found_words_from_prefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
+ /**********************************************************************************************************************
+ *                                                                                                                     *
+ * FUNCTION: outputFoundWordsFromPrefix                                                                                *
+ *                                                                                                                     *
+ * DESCRIPTION: output (calls output_func) all found words from grid that start with a prefix                          *
+ *                                                                                                                     *
+ * PARAMETERS: words_grid - (in) pointer to words grid w/ word list and a grid e.g.:                                   *
+ *                                                                                  +-------+                          *
+ *                                                                                  |a|b|a|n|                          *
+ *                                                                                  +-------+                          *
+ *                                                                                  |s|d|f|d|                          *
+ *                                                                                  +-------+                          *
+ *                                                                                  |g|h|j|o|                          *
+ *                                                                                  +-------+                          *
+ *                                                                                  |k|l|n|z|                          *
+ *                                                                                  +-------+                          *
+ *                                                                                                                     *
+ *             word - (in) prefix string, e.g.: "aband"                                                                *
+ *                                                                                                                     *
+ *             i,j - (in) the x,y indices of the last letter of prefix, e.g.: (1,3)                                    *
+ *                                                                                                                     *
+ *             grid_ctrl - (in) grid control that marks which letters are used (part of prefix) and which aren't e.g.: *
+ *                                                                                  e.g.: (x = used; o = unused)       *
+ *                                                                                  +-------+                          *
+ *                                                                                  |x|x|x|x|                          *
+ *                                                                                  +-------+                          *
+ *                                                                                  |o|o|o|x|                          *
+ *                                                                                  +-------+                          *
+ *                                                                                  |o|o|o|o|                          *
+ *                                                                                  +-------+                          *
+ *                                                                                  |o|o|o|o|                          *
+ *                                                                                  +-------+                          *
+ *                                                                                                                     *
+ * RETURN: none                                                                                                        *
+ *                                                                                                                     *
+ * NOTES:                                                                                                              *
+ *                                                                                                                     *
+ ***********************************************************************************************************************/
+static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
 {
 	char grid_ctrl_next[GRID_X_LEN][GRID_Y_LEN];
 	char word_next[(GRID_X_LEN*GRID_Y_LEN)+1];
@@ -93,8 +130,8 @@ static void output_found_words_from_prefix (WordsGrid *words_grid, char *word, i
 		x = i;
 		y = j;
 
-		/* in a loop: 1) find next adjacent cell 2) recursive call to output_found_words_from_prefix */
-		while (get_next_adjacent_unused_cell(grid_ctrl,i,j,&x,&y))
+		/* in a loop: 1) find next adjacent cell 2) recursive call to outputFoundWordsFromPrefix */
+		while (getNextAdjacentUnusedCell(grid_ctrl,i,j,&x,&y))
 		{
 			/* prepare the next work */
 			word_len = strlen(word);
@@ -103,37 +140,44 @@ static void output_found_words_from_prefix (WordsGrid *words_grid, char *word, i
 			word_next[word_len+1] = '\0';
 			
 			/* prepare the next grid ctrl */
-			copy_grid_ctrl(grid_ctrl_next, grid_ctrl);
+			gridCopy(grid_ctrl_next, grid_ctrl);
 			grid_ctrl_next[x][y] = CELL_USED;
 			
-			output_found_words_from_prefix(words_grid, word_next, x, y, grid_ctrl_next);
+			outputFoundWordsFromPrefix(words_grid, word_next, x, y, grid_ctrl_next);
 		}
 	}
 	/* else: NOT_FOUND - no need to check further this prefix */
 }
 
-/*
-* description: get next adjecent unused cell
-*
-* parameters:
-*
-* grid_ctrl: (input) grid control that marks which letters are used and which aren't e.g. (x=used; -=unused):
-*                           +-------+ 
-*                           |x|x|x|x|
-*                           +-------+
-*                           |-|-|-|x|
-*                           +-------+
-*                           |-|-|-|-|
-*                           +-------+
-*                           |-|-|-|-|
-*                           +-------+
-*
-* i,j: (input) the x,y indices of the letter (to find the next adjacent cell that is unused)
-*
-* x,y: (output) the indices of next unused adjacent letter
-*
-*/
-static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y)
+/***********************************************************************************************************************
+ *                                                                                                                     *
+ * FUNCTION: getNextAdjacentUnusedCell                                                                                 *
+ *                                                                                                                     *
+ * DESCRIPTION: get next adjecent unused cell                                                                          *
+ *                                                                                                                     *
+ * PARAMETERS: grid_ctrl - (in) grid control that marks which letters are used and which aren't e.g.:                  *
+ *                           (x = used; o = unused):                                                                   *
+ *                           +-------+                                                                                 *
+ *                           |x|x|x|x|                                                                                 *
+ *                           +-------+                                                                                 *
+ *                           |o|o|o|x|                                                                                 *
+ *                           +-------+                                                                                 *
+ *                           |o|o|o|o|                                                                                 *
+ *                           +-------+                                                                                 *
+ *                           |o|o|o|o|                                                                                 *
+ *                           +-------+                                                                                 *
+ *                                                                                                                     *
+ *             i,j - (in) the x,y indices of the letter to find the next adjacent unused cell from                     *
+ *                                                                                                                     *
+ *             x,y - (out) the indices of next unused adjacent letter                                                  *
+ *                                                                                                                     *
+ * RETURN: 0 - cell not found                                                                                          *
+ *         1 - cell found                                                                                              *
+ *                                                                                                                     *
+ * NOTES:                                                                                                              *
+ *                                                                                                                     *
+ ***********************************************************************************************************************/
+static int getNextAdjacentUnusedCell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y)
 {
 	while (((*x) != (i-1)) || ((*y) != (j-1)))
 	{
@@ -202,26 +246,17 @@ static int get_next_adjacent_unused_cell (const char grid_ctrl[GRID_X_LEN][GRID_
 	return 0;
 }
 
-/*
-* description: convert string (length GRID_X_LEN x GRID_Y_LEN) to character 2D matrix  grid
-*
-* parameters:
-*
-* string: (input) string (length GRID_X_LEN x GRID_Y_LEN) e.g. (3 x 4): "abcdefghijkl"
-*
-* grid: (output) charater 2D (GRID_X_LEN x GRID_Y_LEN) grid, e.g:
-*                                                                         +-------+ 
-*                                                                         |a|b|c|d|
-*                                                                         +-------+
-*                                                                         |e|f|g|h|
-*                                                                         +-------+
-*                                                                         |i|j|k|l|
-*                                                                         +-------+
-*
-*/
-void init_grid_from_string (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN])
+/*******************************************************************************************************************************************************/
+/************************************************************ external functions definition ************************************************************/
+/*******************************************************************************************************************************************************/
+RETURN_CODE WordsGrid_InitWordList (WordsGrid *words_grid, FILE *file)
 {
-	int i, j, h = 0;
+	return build_wordlist(&(words_grid->word_list), file);
+}
+
+void WordsGrid_SetGrid (WordsGrid *words_grid, const char *string)
+{
+	int i, j, k = 0;
 	
 	assert(strlen(string) == (GRID_X_LEN*GRID_Y_LEN));
 	
@@ -229,17 +264,17 @@ void init_grid_from_string (const char *string, char grid[GRID_X_LEN][GRID_Y_LEN
 	{
 		for (j = 0; j < GRID_Y_LEN; j++)
 		{
-			grid[i][j] = string[h++];
+			words_grid->grid[i][j] = string[k++];
 		}
 	}
 }
 
-void set_output_func (WordsGrid *words_grid, void (*output_func) (char *word))
+void WordsGrid_SetOutputFunc (WordsGrid *words_grid, void (*output_func) (char *word))
 {
 	words_grid->output_func = output_func;
 }
 
-void output_found_words_in_grid (WordsGrid *words_grid)
+void WordsGrid_OutputFoundWords (WordsGrid *words_grid)
 {
    char grid_ctrl[GRID_X_LEN][GRID_Y_LEN];
    char word[(GRID_X_LEN*GRID_Y_LEN)+1];
@@ -249,13 +284,18 @@ void output_found_words_in_grid (WordsGrid *words_grid)
    {
 	   for (j = 0; j < GRID_Y_LEN; j++)
 	   {
-		   init_grid_ctrl(grid_ctrl);
+		   initGridCtrl(grid_ctrl);
 		   grid_ctrl[i][j] = CELL_USED;
 		   
 		   word[0] = words_grid->grid[i][j];
 		   word[1] = '\0';
 		   
-		   output_found_words_from_prefix(words_grid, word, i, j, grid_ctrl);
+		   outputFoundWordsFromPrefix(words_grid, word, i, j, grid_ctrl);
 	   }
    }
+}
+
+void WordsGrid_Free (WordsGrid *words_grid)
+{
+	words_grid->word_list.freed_nodes = free_letter_tree(words_grid->word_list.letter_tree);
 }
