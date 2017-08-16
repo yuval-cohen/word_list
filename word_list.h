@@ -1,6 +1,8 @@
 #ifndef _WORD_LIST_H_
 #define _WORD_LIST_H_
 
+#include <stdio.h>
+
 #define NOT_FOUND		((int)0)
 #define WORD_FOUND		((int)1)
 #define PREFIX_FOUND	((int)2)
@@ -37,11 +39,15 @@ typedef struct _WordList
  *                                                                                                                     *
  * FUNCTION: WordList_BuildCharTree                                                                                    *
  *                                                                                                                     *
- * DESCRIPTION:                                                                                                        *
+ * DESCRIPTION: Build character tree for word list from a word list input file                                         *
  *                                                                                                                     *
- * PARAMETERS:                                                                                                         *
+ * PARAMETERS: word_list (in/out) - pointer to word list to build its character tree                                   *
+ *             file - (in) pointer to (already open) input file to read word list from                                 *
+ *                          convernsion: <word><LF><word><LF><word><LF>...                                             *
  *                                                                                                                     *
- * RETURN:                                                                                                             *
+ * RETURN:    RC_BAD_FORMAT - file format error                                                                        *
+ *            RC_NO_MEM - no memory                                                                                    *
+ *            RC_EOF - no error (end of file)                                                                          *
  *                                                                                                                     *
  * NOTES:                                                                                                              *
  *                                                                                                                     *
@@ -52,11 +58,14 @@ RETURN_CODE WordList_BuildCharTree (WordList *word_list, FILE *file);
  *                                                                                                                     *
  * FUNCTION: WordList_FindWord                                                                                         *
  *                                                                                                                     *
- * DESCRIPTION:                                                                                                        *
+ * DESCRIPTION: search to find a word in a word list's character tree                                                  *
  *                                                                                                                     *
- * PARAMETERS:                                                                                                         *
+ * PARAMETERS: char_tree (in) - pointer to character tree of word list to search the word from                         *
+ *             word (in) - word to search/find                                                                         *
  *                                                                                                                     *
- * RETURN:                                                                                                             *
+ * RETURN: WORD_FOUND - word is found                                                                                  *
+ *         PREFIX_FOUND - word is found as a prefix of another word (e.g. "aband" as a prefix of "abandon")            *
+ *         NOT_FOUND - word not found (also not found as a prefix)                                                     *
  *                                                                                                                     *
  * NOTES:                                                                                                              *
  *                                                                                                                     *
@@ -67,13 +76,13 @@ int WordList_FindWord (CharNode *char_tree, char *word);
  *                                                                                                                     *
  * FUNCTION: WordList_FreeCharTree                                                                                     *
  *                                                                                                                     *
- * DESCRIPTION:                                                                                                        *
+ * DESCRIPTION: free memory dynamically allocated for word list's character tree                                       *
  *                                                                                                                     *
- * PARAMETERS:                                                                                                         *
+ * PARAMETERS: char_tree (in) - pointer to character tree                                                              *
  *                                                                                                                     *
- * RETURN:                                                                                                             *
+ * RETURN: none                                                                                                        *
  *                                                                                                                     *
- * NOTES:                                                                                                              *
+ * NOTES: must be called to free memory at the end of word list life cycle                                             *
  *                                                                                                                     *
  ***********************************************************************************************************************/
 size_t WordList_FreeCharTree (CharNode *char_tree);

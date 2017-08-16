@@ -1,8 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <ctype.h>
 
 #include "gen_defs.h"
 #include "word_list.h"

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <ctype.h>
 
 #include "gen_defs.h"
 
@@ -33,27 +32,32 @@
 /*******************************************************************************************************************************************************/
 /************************************************************ internal functions declation *************************************************************/
 /*******************************************************************************************************************************************************/
-static RETURN_CODE read_next_word_from_file (FILE *file, char read_buffer[READ_BUF_SIZE], char *word);
-static RETURN_CODE add_new_word_to_char_tree (CharNode **char_tree, char *word, size_t *allocated_nodes);
-static CharNode* new_char_node (CharNode **char_node, char ch, unsigned char is_word);
+static RETURN_CODE readNextWordFromFile (FILE *file, char read_buffer[READ_BUF_SIZE], char *word);
+static RETURN_CODE addNewWordToCharTree (CharNode **char_tree, char *word, size_t *allocated_nodes);
+static CharNode* newCharNode (CharNode **char_node, char ch, unsigned char is_word);
 
 /*******************************************************************************************************************************************************/
 /************************************************************ internal functions definition ************************************************************/
 /*******************************************************************************************************************************************************/
 /***********************************************************************************************************************
  *                                                                                                                     *
- * FUNCTION: read_next_word_from_file                                                                                  *
+ * FUNCTION: readNextWordFromFile                                                                                      *
  *                                                                                                                     *
- * DESCRIPTION:                                                                                                        *
+ * DESCRIPTION: Called in a loop to read the next word from a word list file while                                     *
+ *              buffering the read content into a read buffer                                                          *
  *                                                                                                                     *
- * PARAMETERS:                                                                                                         *
+ * PARAMETERS:  file - (in) pointer to (already open) word list input file                                             *
+ *              read_buffer - (in/out) buffer to read the file content to                                              *
+ *              word - (out) next word read                                                                            *
  *                                                                                                                     *
- * RETURN:                                                                                                             *
+ * RETURN: RC_BAD_FORMAT - file format error                                                                           *
+ *         RC_NO_ERROR - word found (no error)                                                                         *
+ *         RC_EOF - end of file (no more words)                                                                        *
  *                                                                                                                     *
  * NOTES:                                                                                                              *
  *                                                                                                                     *
  ***********************************************************************************************************************/
- static RETURN_CODE read_next_word_from_file (FILE *file, char read_buffer[READ_BUF_SIZE], char *word)
+ static RETURN_CODE readNextWordFromFile (FILE *file, char read_buffer[READ_BUF_SIZE], char *word)
 {
 	char *new_line_ptr;
 	size_t read_bytes, cur_length, word_len;
@@ -95,18 +99,21 @@ static CharNode* new_char_node (CharNode **char_node, char ch, unsigned char is_
 
 /***********************************************************************************************************************
  *                                                                                                                     *
- * FUNCTION: new_char_node                                                                                             *
+ * FUNCTION: newCharNode                                                                                               *
  *                                                                                                                     *
- * DESCRIPTION:                                                                                                        *
+ * DESCRIPTION: memory allocate and initialise new character node                                                      *
+ *              (used for every char node for building the char tree)                                                  *
  *                                                                                                                     *
- * PARAMETERS:                                                                                                         *
+ * PARAMETERS: char_node (in/out) - pointer to character node pointer                                                  *
+ *             ch (in) - charactre node char value                                                                     *
+ *             is_word (in) - yes/no if this character node is a word within a character tree                          *
  *                                                                                                                     *
- * RETURN:                                                                                                             *
+ * RETURN: pointer to the new char node (or NULL if could not be allocated)                                            *
  *                                                                                                                     *
  * NOTES:                                                                                                              *
  *                                                                                                                     *
  ***********************************************************************************************************************/
-static CharNode* new_char_node (CharNode **char_node, char ch, unsigned char is_word)
+static CharNode* newCharNode (CharNode **char_node, char ch, unsigned char is_word)
 {
    (*char_node) = (CharNode*)malloc(sizeof(CharNode));
    if ((*char_node) != NULL)
@@ -122,18 +129,22 @@ static CharNode* new_char_node (CharNode **char_node, char ch, unsigned char is_
 
 /***********************************************************************************************************************
  *                                                                                                                     *
- * FUNCTION: add_new_word_to_char_tree                                                                                 *
+ * FUNCTION: addNewWordToCharTree                                                                                      *
  *                                                                                                                     *
- * DESCRIPTION:                                                                                                        *
+ * DESCRIPTION: Add new word to character tree                                                                         *
+ *              (called in a loop for every word read from word list file to be added to the character tree)           *
  *                                                                                                                     *
- * PARAMETERS:                                                                                                         *
+ * PARAMETERS: char_tree - (in/out) pointer to character tree pointer                                                  *
+ *             word  - (in) word to be added                                                                           *
+ *             allocated_nodes - (out) number of new nodes allocated as a result                                       *
  *                                                                                                                     *
- * RETURN:                                                                                                             *
+ * RETURN: RC_NO_ERROR - no error                                                                                      *
+ *         RC_NO_MEM - error, no memory (nodes could not be allocated)                                                 *
  *                                                                                                                     *
  * NOTES:                                                                                                              *
  *                                                                                                                     *
  ***********************************************************************************************************************/
-static RETURN_CODE add_new_word_to_char_tree (CharNode **char_tree, char *word, size_t *allocated_nodes)
+static RETURN_CODE addNewWordToCharTree (CharNode **char_tree, char *word, size_t *allocated_nodes)
 {
    CharNode *nxt_search = (*char_tree);
    CharNode *nxt_search_prev;
@@ -151,7 +162,7 @@ static RETURN_CODE add_new_word_to_char_tree (CharNode **char_tree, char *word, 
 	  /* no charaters exist in this depth */
 	  if (nxt_search == NULL)
 	  {
-		 char_node = new_char_node(&char_node, word[i], is_word);
+		 char_node = newCharNode(&char_node, word[i], is_word);
 		 if (char_node == NULL)
 		 {
 			return RC_NO_MEM;
@@ -199,7 +210,7 @@ static RETURN_CODE add_new_word_to_char_tree (CharNode **char_tree, char *word, 
 			   if (adj_adj_search == NULL)
 			   {
 				  /* add character to the end of ADJACENT list */
-				  char_node = new_char_node(&char_node, word[i], is_word);
+				  char_node = newCharNode(&char_node, word[i], is_word);
 				  if (char_node == NULL)
 				  {
 					 return RC_NO_MEM;
@@ -216,7 +227,7 @@ static RETURN_CODE add_new_word_to_char_tree (CharNode **char_tree, char *word, 
 			   else if (adj_adj_search->ch > (word[i]))
 			   {
 				  /* add character between adj_search and adj_adj_search */
-				  char_node = new_char_node(&char_node, word[i], is_word);
+				  char_node = newCharNode(&char_node, word[i], is_word);
 				  if (char_node == NULL)
 				  {
 					 return RC_NO_MEM;
@@ -235,7 +246,7 @@ static RETURN_CODE add_new_word_to_char_tree (CharNode **char_tree, char *word, 
 			else /* (adj_search->ch > (word[i])) */
 			{
 			   /* add character at the start of ADJACENT list */
-			   char_node = new_char_node(&char_node, word[i], is_word);
+			   char_node = newCharNode(&char_node, word[i], is_word);
 			   if (char_node == NULL)
 			   {
 				  return RC_NO_MEM;
@@ -273,9 +284,9 @@ RETURN_CODE WordList_BuildCharTree (WordList *word_list, FILE *file)
 	word_list->freed_nodes = 0;
 
 	/* build word_list from file */
-	while ((ret_code = read_next_word_from_file(file, read_buffer, word)) == RC_NO_ERROR)
+	while ((ret_code = readNextWordFromFile(file, read_buffer, word)) == RC_NO_ERROR)
 	{
-	  ret_code = add_new_word_to_char_tree(&(word_list->char_tree), word, &(word_list->allocated_nodes));
+	  ret_code = addNewWordToCharTree(&(word_list->char_tree), word, &(word_list->allocated_nodes));
 	  if (ret_code != RC_NO_ERROR)
 	  {
 		 break;
