@@ -82,7 +82,7 @@ int WordList_FindWord (CharNode *char_tree, char *word);
  *                                                                                                                     *
  * RETURN: none                                                                                                        *
  *                                                                                                                     *
- * NOTES: must be called to free memory at the end of word list life cycle                                             *
+ * NOTES: must be called to free memory at the end of word list life time                                              *
  *                                                                                                                     *
  ***********************************************************************************************************************/
 size_t WordList_FreeCharTree (CharNode *char_tree);

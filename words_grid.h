@@ -100,7 +100,7 @@ void WordsGrid_OutputFoundWords (WordsGrid *words_grid);
  *                                                                                                                     *
  * RETURN: none                                                                                                        *
  *                                                                                                                     *
- * NOTES: must be called to free words grid memory at the end of words grid life cycle                                 *
+ * NOTES: must be called to free words grid memory at the end of words grid life time                                  *
  *                                                                                                                     *
  ***********************************************************************************************************************/
 void WordsGrid_Free (WordsGrid *words_grid);
