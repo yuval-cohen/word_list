@@ -1,12 +1,11 @@
-Goal:
+Word Search:
 
-Write a program in C to find all words from a word list file (such as /usr/share/dict/words or
-/usr/dict/words) that can be found in a 4x4 grid of letters.
+A program in C that finds all words from a word list file (such as .\word.list) that can be found in a 4x4 grid of letters.
 
 The grid should be given as input to the program. Specify the grid as one 16-character
-argument or 16 1-character arguments to the program or in some other reasonable way.
+argumen.
 
-Problem Details:
+Details:
 A word can be found in a grid by starting on any letter, then moving to an adjacent letter and so
 on.
 
@@ -32,20 +31,19 @@ a z z z
 
 contains the words "be", "ha", and "ah". It should not contain "bee" or "ebb" or "he" or "hah".
 
-Implementation Details:
+Your program prints any word found to the standard output.
 
-Your program should not print any word more than once. Your program can assume that the
-word list file contains no duplicated words and that the input arguments are valid.
+Your program assumes that the word list file contains no duplicated words and that the input arguments are valid.
 
-Your program should be tolerant of word files that contain a mixture of upper and lower case
-words and of words that contain punctuation. Your program can deal with such words in some
-reasonable way. Note that different word list files can be alphabetized differently.
+Your program is not tolerant to word files that contain a mixture of upper and lower case
+words and of words that contain punctuation.
 
-Please specify the grid on the command line as the last argument or arguments
-and print the results to the standard output. An example program run might be:
-a.out /usr/share/dict/words abanzqzdrrorrnrr
+The program expects the grid on the command line as the last argument and print the results to the standard output. 
+An example program run might be:
+word_search.exe word.list abanzqzdrrorrnrr
 ...
 abandon
 ...
-Your output should be a list of matching words separated by newlines. Don't print out anything
-else unless your program is reporting an error condition.
+
+The output is a list of matching words separated by newlines.
+The program doesn't print out anything else unless your program is reporting an error.
