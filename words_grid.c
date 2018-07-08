@@ -10,10 +10,10 @@
 /*******************************************************************************************************************************************************/
 /************************************************************ internal functions declation *************************************************************/
 /*******************************************************************************************************************************************************/
-static void initGridCtrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
-static void gridCopy (char grid_dest[GRID_X_LEN][GRID_Y_LEN], const char grid_src[GRID_X_LEN][GRID_Y_LEN]);
-static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN]);
-static int getNextAdjacentUnusedCell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y);
+static void initGridCtrl (char grid_ctrl[][GRID_Y_LEN], int size);
+static void gridCopy (char grid_dest[][GRID_Y_LEN], char grid_src[][GRID_Y_LEN], int size);
+static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[][GRID_Y_LEN], int size);
+static int getNextAdjacentUnusedCell (char grid_ctrl[][GRID_Y_LEN], int size, int i, int j, int *x, int *y);
 
 /*******************************************************************************************************************************************************/
 /************************************************************ internal functions definition ************************************************************/
@@ -31,11 +31,11 @@ static int getNextAdjacentUnusedCell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LE
  * NOTES:                                                                                                             *
  *                                                                                                                    *
  **********************************************************************************************************************/
-static void initGridCtrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
+static void initGridCtrl (char grid_ctrl[][GRID_Y_LEN], int size)
 {
 	int i, j;
    
-	for (i = 0; i < GRID_X_LEN; i++)
+	for (i = 0; i < size; i++)
 	{
 		for (j = 0; j < GRID_Y_LEN; j++)
 		{
@@ -57,11 +57,11 @@ static void initGridCtrl (char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
  * NOTES:                                                                                                             *
  *                                                                                                                    *
  *********************************************************************************************************************/
-static void gridCopy (char grid_dest[GRID_X_LEN][GRID_Y_LEN], const char grid_src[GRID_X_LEN][GRID_Y_LEN])
+static void gridCopy (char grid_dest[][GRID_Y_LEN], char grid_src[][GRID_Y_LEN], int size)
 {
 	int i, j;
    
-	for (i = 0; i < GRID_X_LEN; i++)
+	for (i = 0; i < size; i++)
 	{
 		for (j = 0; j < GRID_Y_LEN; j++)
 		{
@@ -108,7 +108,7 @@ static void gridCopy (char grid_dest[GRID_X_LEN][GRID_Y_LEN], const char grid_sr
  * NOTES:                                                                                                              *
  *                                                                                                                     *
  ***********************************************************************************************************************/
-static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[GRID_X_LEN][GRID_Y_LEN])
+static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i, int j, char grid_ctrl[][GRID_Y_LEN], int size)
 {
 	char grid_ctrl_next[GRID_X_LEN][GRID_Y_LEN];
 	char word_next[(GRID_X_LEN*GRID_Y_LEN)+1];
@@ -129,7 +129,7 @@ static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i
 		y = j;
 
 		/* in a loop: 1) find next adjacent cell 2) recursive call to outputFoundWordsFromPrefix */
-		while (getNextAdjacentUnusedCell(grid_ctrl,i,j,&x,&y))
+		while (getNextAdjacentUnusedCell(grid_ctrl,GRID_X_LEN,i,j,&x,&y))
 		{
 			/* prepare the next work */
 			word_len = strlen(word);
@@ -138,10 +138,10 @@ static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i
 			word_next[word_len+1] = '\0';
 			
 			/* prepare the next grid ctrl */
-			gridCopy(grid_ctrl_next, grid_ctrl);
+			gridCopy(grid_ctrl_next, grid_ctrl, GRID_X_LEN);
 			grid_ctrl_next[x][y] = CELL_USED;
 			
-			outputFoundWordsFromPrefix(words_grid, word_next, x, y, grid_ctrl_next);
+			outputFoundWordsFromPrefix(words_grid, word_next, x, y, grid_ctrl_next, GRID_X_LEN);
 		}
 	}
 	/* else: NOT_FOUND - no need to check further this prefix */
@@ -175,7 +175,7 @@ static void outputFoundWordsFromPrefix (WordsGrid *words_grid, char *word, int i
  * NOTES:                                                                                                              *
  *                                                                                                                     *
  ***********************************************************************************************************************/
-static int getNextAdjacentUnusedCell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LEN], int i, int j, int *x, int *y)
+static int getNextAdjacentUnusedCell (char grid_ctrl[][GRID_Y_LEN], int size, int i, int j, int *x, int *y)
 {
 	while (((*x) != (i-1)) || ((*y) != (j-1)))
 	{
@@ -234,7 +234,7 @@ static int getNextAdjacentUnusedCell (const char grid_ctrl[GRID_X_LEN][GRID_Y_LE
 			(*x) = (i-1);
 		}
 		
-		if (((*x) >= 0) && ((*x) < GRID_X_LEN) && ((*y) >= 0) && ((*y) < GRID_Y_LEN) && (grid_ctrl[*x][*y] == CELL_NOT_USED))
+		if (((*x) >= 0) && ((*x) < size) && ((*y) >= 0) && ((*y) < GRID_Y_LEN) && (grid_ctrl[*x][*y] == CELL_NOT_USED))
 		{
 			/* cell exists and unused */
 			return 1;
@@ -282,13 +282,13 @@ void WordsGrid_OutputFoundWords (WordsGrid *words_grid)
    {
 	   for (j = 0; j < GRID_Y_LEN; j++)
 	   {
-		   initGridCtrl(grid_ctrl);
+		   initGridCtrl(grid_ctrl, GRID_X_LEN);
 		   grid_ctrl[i][j] = CELL_USED;
 		   
 		   word[0] = words_grid->grid[i][j];
 		   word[1] = '\0';
 		   
-		   outputFoundWordsFromPrefix(words_grid, word, i, j, grid_ctrl);
+		   outputFoundWordsFromPrefix(words_grid, word, i, j, grid_ctrl, GRID_X_LEN);
 	   }
    }
 }
