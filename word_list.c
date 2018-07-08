@@ -147,7 +147,7 @@ static CharNode* newCharNode (CharNode **char_node, char ch, unsigned char is_wo
 static RETURN_CODE addNewWordToCharTree (CharNode **char_tree, char *word, size_t *allocated_nodes)
 {
    CharNode *nxt_search = (*char_tree);
-   CharNode *nxt_search_prev;
+   CharNode *nxt_search_prev = NULL;
    CharNode *adj_search;
    CharNode *adj_adj_search;
    CharNode *char_node;

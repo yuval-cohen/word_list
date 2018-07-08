@@ -24,7 +24,7 @@ int main (int argc, char* argv[])
 #ifndef _MY_DEBUG_
 	if ((argc != 3) || (strlen(argv[2]) != (GRID_X_LEN*GRID_Y_LEN)))
 	{
-		printf("Usage: word_list.exe <word-list-file> <gird-as-%d-chars-string>\n", GRID_X_LEN*GRID_Y_LEN);
+		printf("Usage: word_search.exe <word-list-file> <gird-as-%d-chars-string>\n", GRID_X_LEN*GRID_Y_LEN);
 	}
 	else
 #endif
